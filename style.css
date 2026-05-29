@@ -397,3 +397,64 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
   margin: 22px 0 12px;
   font-size: 10px;
 }
+
+/* Extra compact standings table, keeping the same visual language */
+.table-shell {
+  border-radius: 12px;
+}
+.poster-table {
+  min-width: 620px;
+  font-size: 11px;
+}
+.general-table {
+  min-width: 720px;
+}
+.poster-table th {
+  height: 30px;
+  padding: 0 6px;
+  font-size: 8px;
+  letter-spacing: 1.1px;
+}
+.poster-table th:first-child {
+  width: 42px;
+}
+.poster-table th:nth-child(2) {
+  width: 156px;
+  padding-left: 10px;
+}
+.poster-table td {
+  height: 36px;
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 1;
+}
+.rank-cell span {
+  font-size: 14px;
+}
+.player-cell {
+  height: 36px;
+  gap: 8px;
+  padding-left: 10px;
+}
+.player-cell strong {
+  font-size: 11px;
+  letter-spacing: .45px;
+}
+.player-cell .avatar,
+.poster-table .avatar {
+  width: 24px;
+  height: 24px;
+  font-size: 8px;
+}
+.points {
+  font-size: 14px !important;
+}
+.empty-cell {
+  padding: 18px 12px;
+}
+.poster-footer {
+  margin-top: 12px;
+}
+.tournament-poster .stats-grid {
+  margin-bottom: 16px;
+}
