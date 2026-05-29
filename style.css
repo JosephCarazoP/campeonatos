@@ -187,33 +187,49 @@ h1 {
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 16px; overflow: hidden;
 }
+
+/* grid: rank(24) + avatar(32) + name(auto) + 8 cols(30px each) */
+.table-grid {
+  display: grid;
+  grid-template-columns: 28px 32px 1fr 30px 30px 30px 30px 30px 30px 30px 36px;
+  align-items: center;
+  column-gap: 6px;
+}
+
 .table-header {
-  display: flex; padding: 10px 14px;
-  font-size: 10px; font-weight: 700; color: #444;
+  padding: 10px 14px;
+  font-size: 9px; font-weight: 700; color: #444;
   letter-spacing: 1.5px; text-transform: uppercase;
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
+.table-header span { text-align: center; }
+.table-header .th-name { text-align: left; }
+
 .standing-row {
-  display: flex; align-items: center;
-  padding: 12px 14px;
+  padding: 11px 14px;
   border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.2s;
 }
 .standing-row.top { background: rgba(0,198,255,0.03); }
+.standing-row:last-child { border-bottom: none; }
 
-.col-name { flex: 2; display: flex; align-items: center; gap: 10px; }
-.col { flex: 1; text-align: center; font-size: 13px; color: #aaa; }
-.col.green { color: #22C55E; }
-.col.yellow-c { color: #FACC15; }
-.col.red { color: #FF6B35; }
-.pts-col { color: #FACC15 !important; font-weight: 800; font-size: 15px !important; }
+.col { text-align: center; font-size: 12px; color: #aaa; font-variant-numeric: tabular-nums; }
+.col.green  { color: #22C55E; font-weight: 700; }
+.col.yellow-c { color: #FACC15; font-weight: 700; }
+.col.red    { color: #FF6B35; font-weight: 700; }
+.pts-col {
+  text-align: center;
+  color: #FACC15; font-weight: 900; font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
 
 .avatar-sm {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 800; color: #000; flex-shrink: 0;
 }
-.rank { font-size: 16px; min-width: 24px; }
-.player-name { font-size: 13px; font-weight: 700; letter-spacing: 0.3px; }
+.rank { font-size: 15px; text-align: center; }
+.player-name { font-size: 13px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* LEO BANNER */
 .leo-banner {
