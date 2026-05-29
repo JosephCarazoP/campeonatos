@@ -495,6 +495,15 @@ function renderChampionshipList() {
     list.innerHTML = `<div class="empty-state">Todavía no hay torneos guardados.</div>`;
     return;
   }
+  const standings = buildStats([current], current.playerIds);
+  const done = current.matches.filter(played).length;
+  document.getElementById("tournamentSummary").innerHTML = `
+    <article class="stat-card"><div class="stat-icon">ST</div><div><span>Estado</span><strong>${championshipStatus(current)}</strong><small>${done}/${current.matches.length} partidos</small></div></article>
+    <article class="stat-card"><div class="stat-icon">FM</div><div><span>Formato</span><strong>${escapeHTML(formatConfig(current.format).label)}</strong><small>${current.playerIds.length} jugadores</small></div></article>
+    <article class="stat-card"><div class="stat-icon">L</div><div><span>Líder</span><strong>${escapeHTML(standings[0]?.name || "—")}</strong><small>${standings[0]?.pts || 0} pts</small></div></article>
+    <article class="stat-card"><div class="stat-icon">CP</div><div><span>Campeón</span><strong>${escapeHTML(championName(current))}</strong><small>Actualizado en vivo</small></div></article>
+  `;
+}
 
   list.innerHTML = state.championships.map(championship => {
     const done = championship.matches.filter(played).length;
