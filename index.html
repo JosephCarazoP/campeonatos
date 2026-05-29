@@ -14,73 +14,148 @@
 
   <header>
     <div class="badge">FIFA 26</div>
-    <h1>TORNEO</h1>
-    <p class="subtitle">⚽ Champions League de Amigos</p>
+    <h1 id="appTitle">TORNEO</h1>
+    <p class="subtitle" id="appSubtitle">⚽ Campeonatos locales entre amigos</p>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <p class="progress-label" id="progressLabel">0/10 partidos jugados</p>
+    <p class="progress-label" id="progressLabel">0/0 partidos jugados</p>
   </header>
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('matches')">⚽ Partidos</button>
+  <nav class="tabs" aria-label="Secciones del torneo">
+    <button class="tab active" onclick="switchTab('championships')">🏟️ Campeonatos</button>
+    <button class="tab" onclick="switchTab('matches')">⚽ Partidos</button>
     <button class="tab" onclick="switchTab('table')">🏆 Tabla</button>
-  </div>
+    <button class="tab" onclick="switchTab('stats')">📊 General</button>
+    <button class="tab" onclick="switchTab('players')">👥 Jugadores</button>
+  </nav>
 
-  <div class="content">
-    <div id="matchesTab">
-
-      <!-- LEO BANNER -->
-      <div class="leo-banner" id="leoBanner">
-        <div class="leo-banner-left">
-          <span class="leo-icon">🦁</span>
+  <main class="content">
+    <section id="championshipsTab">
+      <div class="panel">
+        <div class="panel-heading">
           <div>
-            <div class="leo-title">¿Llega Leo?</div>
-            <div class="leo-sub">Si no llega, se aplican WO 3-0 automáticos</div>
+            <h2>Crear campeonato</h2>
+            <p>Elige reglas, jugadores y se generará el calendario aleatoriamente.</p>
           </div>
         </div>
-        <div class="leo-actions">
-          <button class="btn-leo btn-leo-yes" onclick="setLeoStatus('yes')">✅ Sí llega</button>
-          <button class="btn-leo btn-leo-no" onclick="setLeoStatus('no')">❌ No llega (WO)</button>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Nombre del campeonato</span>
+            <input id="championshipName" type="text" placeholder="Ej: Sábado Champions" />
+          </label>
+          <label class="field">
+            <span>Formato</span>
+            <select id="championshipRounds">
+              <option value="1">Solo ida</option>
+              <option value="2" selected>Ida y vuelta</option>
+            </select>
+          </label>
         </div>
+
+        <div class="field block-field">
+          <span>Jugadores precargados</span>
+          <div class="player-picker" id="playerPicker"></div>
+        </div>
+
+        <label class="field block-field">
+          <span>Agregar jugadores nuevos para este campeonato</span>
+          <textarea id="championshipNewPlayers" rows="3" placeholder="Un jugador por línea o separados por comas"></textarea>
+        </label>
+
+        <button class="btn-primary" onclick="createChampionship()">✨ Crear y sortear partidos</button>
       </div>
 
-      <!-- IDA (vuelta 1) -->
-      <div class="session-label"><span class="dot"></span> Ida — Desde las 5:00 PM</div>
-      <div id="session1"></div>
-
-      <!-- Leo session or vuelta label -->
-      <div class="session-label" style="margin-top:24px" id="leoSessionLabel">
-        <span class="dot yellow"></span>
-        <span id="leoSessionText">Desde las 7:00 PM — 🦁 Llega Leo</span>
+      <div class="panel compact-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Campeonatos guardados</h2>
+            <p>Cada campeonato mantiene su propia tabla y reglas localmente.</p>
+          </div>
+        </div>
+        <div id="championshipList" class="championship-list"></div>
       </div>
-      <div id="session2"></div>
+    </section>
 
-      <!-- VUELTA section (hidden until Leo confirmed or not) -->
-      <div id="vueltaSection" style="display:none">
-        <div class="session-label" style="margin-top:24px"><span class="dot pink"></span> Vuelta</div>
-        <div id="sessionVuelta"></div>
-      </div>
+    <section id="matchesTab" style="display:none">
+      <div class="empty-state" id="matchesEmpty">Crea o selecciona un campeonato para ver los partidos.</div>
+      <div id="matchesContainer"></div>
+    </section>
 
-    </div>
-
-    <div id="tableTab" style="display:none">
+    <section id="tableTab" style="display:none">
+      <div class="stats-strip" id="localHighlights"></div>
       <div class="table-wrap">
-        <div class="table-header table-grid">
-          <span></span>
-          <span></span>
-          <span class="th-name">Jugador</span>
-          <span>PJ</span>
-          <span>V</span>
-          <span>E</span>
-          <span>D</span>
-          <span>GF</span>
-          <span>GC</span>
-          <span>DIF</span>
-          <span>PTS</span>
-        </div>
-        <div id="standingsBody"></div>
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th class="rank-head">#</th>
+              <th class="avatar-head"></th>
+              <th class="name-head">Jugador</th>
+              <th>PJ</th>
+              <th>V</th>
+              <th>E</th>
+              <th>D</th>
+              <th>GF</th>
+              <th>GC</th>
+              <th>DIF</th>
+              <th>PC</th>
+              <th>PTS</th>
+            </tr>
+          </thead>
+          <tbody id="standingsBody"></tbody>
+        </table>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <section id="statsTab" style="display:none">
+      <div class="panel compact-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Tabla general</h2>
+            <p>Acumula los datos de todos los campeonatos guardados.</p>
+          </div>
+        </div>
+        <div class="stats-strip" id="globalHighlights"></div>
+        <div class="table-wrap general-table-wrap">
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th class="rank-head">#</th>
+                <th class="avatar-head"></th>
+                <th class="name-head">Jugador</th>
+                <th>Torneos</th>
+                <th>PJ</th>
+                <th>V</th>
+                <th>E</th>
+                <th>D</th>
+                <th>GF</th>
+                <th>GC</th>
+                <th>DIF</th>
+                <th>PC</th>
+                <th>PTS</th>
+              </tr>
+            </thead>
+            <tbody id="globalStandingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="playersTab" style="display:none">
+      <div class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Jugadores</h2>
+            <p>Estos jugadores se precargan al crear un campeonato. El avatar usa iniciales y un color único.</p>
+          </div>
+        </div>
+        <div class="inline-form">
+          <input id="playerNameInput" type="text" placeholder="Nombre del jugador" />
+          <button class="btn-primary" onclick="addPlayerFromInput()">➕ Agregar</button>
+        </div>
+        <div id="playersList" class="players-list"></div>
+      </div>
+    </section>
+  </main>
 
   <script src="app.js"></script>
 </body>
