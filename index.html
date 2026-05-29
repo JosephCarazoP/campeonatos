@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Torneo FIFA 26</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="bg-glow1"></div>
+  <div class="bg-glow2"></div>
+  <div class="bg-grid"></div>
+
+  <header>
+    <div class="badge">FIFA 26</div>
+    <h1>TORNEO</h1>
+    <p class="subtitle">⚽ Champions League de Amigos</p>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <p class="progress-label" id="progressLabel">0/10 partidos jugados</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('matches')">⚽ Partidos</button>
+    <button class="tab" onclick="switchTab('table')">🏆 Tabla</button>
+  </div>
+
+  <div class="content">
+    <div id="matchesTab">
+      <div class="session-label"><span class="dot"></span> Desde las 5:00 PM</div>
+      <div id="session1"></div>
+      <div class="session-label" style="margin-top:24px"><span class="dot yellow"></span> Desde las 7:00 PM — 🦁 Llega Leo</div>
+      <div id="session2"></div>
+    </div>
+
+    <div id="tableTab" style="display:none">
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="col-name">Jugador</span>
+          <span class="col">PJ</span>
+          <span class="col">V</span>
+          <span class="col">E</span>
+          <span class="col">D</span>
+          <span class="col">GF</span>
+          <span class="col">GC</span>
+          <span class="col">DIF</span>
+          <span class="col pts-col">PTS</span>
+        </div>
+        <div id="standingsBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
