@@ -27,10 +27,39 @@
 
   <div class="content">
     <div id="matchesTab">
-      <div class="session-label"><span class="dot"></span> Desde las 5:00 PM</div>
+
+      <!-- LEO BANNER -->
+      <div class="leo-banner" id="leoBanner">
+        <div class="leo-banner-left">
+          <span class="leo-icon">🦁</span>
+          <div>
+            <div class="leo-title">¿Llega Leo?</div>
+            <div class="leo-sub">Si no llega, se aplican WO 3-0 automáticos</div>
+          </div>
+        </div>
+        <div class="leo-actions">
+          <button class="btn-leo btn-leo-yes" onclick="setLeoStatus('yes')">✅ Sí llega</button>
+          <button class="btn-leo btn-leo-no" onclick="setLeoStatus('no')">❌ No llega (WO)</button>
+        </div>
+      </div>
+
+      <!-- IDA (vuelta 1) -->
+      <div class="session-label"><span class="dot"></span> Ida — Desde las 5:00 PM</div>
       <div id="session1"></div>
-      <div class="session-label" style="margin-top:24px"><span class="dot yellow"></span> Desde las 7:00 PM — 🦁 Llega Leo</div>
+
+      <!-- Leo session or vuelta label -->
+      <div class="session-label" style="margin-top:24px" id="leoSessionLabel">
+        <span class="dot yellow"></span>
+        <span id="leoSessionText">Desde las 7:00 PM — 🦁 Llega Leo</span>
+      </div>
       <div id="session2"></div>
+
+      <!-- VUELTA section (hidden until Leo confirmed or not) -->
+      <div id="vueltaSection" style="display:none">
+        <div class="session-label" style="margin-top:24px"><span class="dot pink"></span> Vuelta</div>
+        <div id="sessionVuelta"></div>
+      </div>
+
     </div>
 
     <div id="tableTab" style="display:none">
