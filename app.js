@@ -212,13 +212,11 @@ function renderTable() {
     const difColor = p.dif > 0 ? "#22C55E" : p.dif < 0 ? "#FF6B35" : "#aaa";
     const difStr = (p.dif > 0 ? "+" : "") + p.dif;
     const row = document.createElement("div");
-    row.className = "standing-row" + (i < 3 ? " top" : "");
+    row.className = "standing-row table-grid" + (i < 3 ? " top" : "");
     row.innerHTML = `
-      <div class="col-name">
-        <span class="rank">${medals[i] || (i + 1)}</span>
-        <div class="avatar-sm" style="background:${AVATAR_COLORS[p.name]}">${initials(p.name)}</div>
-        <span class="player-name">${p.name}</span>
-      </div>
+      <span class="rank">${medals[i] || (i + 1)}</span>
+      <div class="avatar-sm" style="background:${AVATAR_COLORS[p.name]}">${initials(p.name)}</div>
+      <span class="player-name">${p.name}</span>
       <span class="col">${p.pj}</span>
       <span class="col green">${p.v}</span>
       <span class="col yellow-c">${p.e}</span>
@@ -226,7 +224,7 @@ function renderTable() {
       <span class="col">${p.ga}</span>
       <span class="col">${p.gr}</span>
       <span class="col" style="color:${difColor}">${difStr}</span>
-      <span class="col pts-col">${p.pts}</span>
+      <span class="pts-col">${p.pts}</span>
     `;
     body.appendChild(row);
   });
