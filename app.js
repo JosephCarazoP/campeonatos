@@ -393,24 +393,24 @@ function highlights(stats, championships = state.championships) {
   const totalGoals = allMatches.reduce((sum, match) => played(match) ? sum + match.hs + match.as : sum, 0);
 
   if (!withGames.length) return [
-    { icon: "🏆", label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
-    { icon: "⚽", label: "Partidos", value: playedCount, sub: `${allMatches.length} programados` },
-    { icon: "🥅", label: "Goles", value: totalGoals, sub: "Total anotado" },
-    { icon: "🔥", label: "Más victorias", value: "—", sub: "Sin partidos" },
-    { icon: "🎯", label: "Goleador", value: "—", sub: "Sin goles" },
-    { icon: "🧤", label: "Porterías", value: "—", sub: "Sin datos" }
+    { icon: "TR", label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
+    { icon: "PJ", label: "Partidos", value: playedCount, sub: `${allMatches.length} programados` },
+    { icon: "GF", label: "Goles", value: totalGoals, sub: "Total anotado" },
+    { icon: "V", label: "Más victorias", value: "—", sub: "Sin partidos" },
+    { icon: "GL", label: "Goleador", value: "—", sub: "Sin goles" },
+    { icon: "PC", label: "Porterías", value: "—", sub: "Sin datos" }
   ];
 
   const byWins = [...withGames].sort((a, b) => b.v - a.v || b.pts - a.pts)[0];
   const byGoals = [...withGames].sort((a, b) => b.gf - a.gf || b.v - a.v)[0];
   const byCleanSheets = [...withGames].sort((a, b) => b.cleanSheets - a.cleanSheets || b.v - a.v)[0];
   return [
-    { icon: "🏆", label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
-    { icon: "⚽", label: "Partidos", value: playedCount, sub: `${allMatches.length} programados` },
-    { icon: "🥅", label: "Goles", value: totalGoals, sub: "Total anotado" },
-    { icon: "🔥", label: "Más victorias", value: byWins.name, sub: `${byWins.v} ganados` },
-    { icon: "🎯", label: "Goleador", value: byGoals.name, sub: `${byGoals.gf} goles` },
-    { icon: "🧤", label: "Porterías", value: byCleanSheets.name, sub: `${byCleanSheets.cleanSheets} en cero` }
+    { icon: "TR", label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
+    { icon: "PJ", label: "Partidos", value: playedCount, sub: `${allMatches.length} programados` },
+    { icon: "GF", label: "Goles", value: totalGoals, sub: "Total anotado" },
+    { icon: "V", label: "Más victorias", value: byWins.name, sub: `${byWins.v} ganados` },
+    { icon: "GL", label: "Goleador", value: byGoals.name, sub: `${byGoals.gf} goles` },
+    { icon: "PC", label: "Porterías", value: byCleanSheets.name, sub: `${byCleanSheets.cleanSheets} en cero` }
   ];
 }
 
@@ -520,10 +520,10 @@ function renderTournamentSummary() {
   const standings = buildStats([current], current.playerIds);
   const done = current.matches.filter(played).length;
   document.getElementById("tournamentSummary").innerHTML = `
-    <article class="stat-card"><div class="stat-icon">📌</div><div><span>Estado</span><strong>${championshipStatus(current)}</strong><small>${done}/${current.matches.length} partidos</small></div></article>
-    <article class="stat-card"><div class="stat-icon">⚙️</div><div><span>Formato</span><strong>${escapeHTML(formatConfig(current.format).label)}</strong><small>${current.playerIds.length} jugadores</small></div></article>
-    <article class="stat-card"><div class="stat-icon">👑</div><div><span>Líder</span><strong>${escapeHTML(standings[0]?.name || "—")}</strong><small>${standings[0]?.pts || 0} pts</small></div></article>
-    <article class="stat-card"><div class="stat-icon">🏁</div><div><span>Campeón</span><strong>${escapeHTML(championName(current))}</strong><small>Actualizado en vivo</small></div></article>
+    <article class="stat-card"><div class="stat-icon">ST</div><div><span>Estado</span><strong>${championshipStatus(current)}</strong><small>${done}/${current.matches.length} partidos</small></div></article>
+    <article class="stat-card"><div class="stat-icon">FM</div><div><span>Formato</span><strong>${escapeHTML(formatConfig(current.format).label)}</strong><small>${current.playerIds.length} jugadores</small></div></article>
+    <article class="stat-card"><div class="stat-icon">L</div><div><span>Líder</span><strong>${escapeHTML(standings[0]?.name || "—")}</strong><small>${standings[0]?.pts || 0} pts</small></div></article>
+    <article class="stat-card"><div class="stat-icon">CP</div><div><span>Campeón</span><strong>${escapeHTML(championName(current))}</strong><small>Actualizado en vivo</small></div></article>
   `;
 }
 
@@ -531,7 +531,7 @@ function stageTitle(match) {
   if (match.stage === "final") return "Final";
   if (match.stage === "third") return "Tercer lugar";
   if (match.stage === "knockout") return match.round === 1 ? "Eliminación directa" : `Ronda ${match.round}`;
-  return `${match.leg === 2 ? "Vuelta" : "Ida"} · Jornada ${match.round}`;
+  return match.leg === 2 ? "Vuelta" : "Ida";
 }
 
 function renderMatches() {
@@ -559,7 +559,7 @@ function buildByeCard(bye) {
   return `
     <article class="bye-card">
       <span class="avatar small" style="background:${getPlayerColor(bye.playerId)}">${initials(getPlayerName(bye.playerId))}</span>
-      <strong>${escapeHTML(getPlayerName(bye.playerId))}</strong> descansa esta jornada por cantidad impar de jugadores.
+      <strong>${escapeHTML(getPlayerName(bye.playerId))}</strong> descansa este turno por cantidad impar de jugadores.
     </article>
   `;
 }

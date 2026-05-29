@@ -286,3 +286,114 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
   .poster-table td { height: 50px; }
   .player-cell { height: 50px; }
 }
+
+/* Darker, smaller and better-spaced compact cards */
+.stats-grid, .summary-grid {
+  gap: 18px;
+  margin: 18px 0 24px;
+}
+.stat-card {
+  min-height: 112px;
+  aspect-ratio: 1 / .72;
+  padding: 13px;
+  border-color: rgba(124, 92, 255, .18);
+  background:
+    radial-gradient(circle at 88% 12%, rgba(124, 92, 255, .16), transparent 32%),
+    linear-gradient(145deg, rgba(9, 12, 19, .96), rgba(4, 6, 11, .94));
+  box-shadow: 0 14px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.025);
+}
+.stat-card::after {
+  opacity: .35;
+}
+.stat-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.035);
+  border-color: rgba(124,92,255,.20);
+  color: #8f7dff;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 1px;
+}
+.stat-card span {
+  color: #747c91;
+  font-size: 8px;
+  letter-spacing: 1.7px;
+}
+.stat-card strong {
+  margin-top: 6px;
+  font-size: clamp(16px, 2.2vw, 22px);
+}
+.stat-card small {
+  margin-top: 6px;
+  color: #6f63c7;
+  font-size: 9px;
+}
+
+.poster-panel, .panel {
+  background: linear-gradient(180deg, rgba(10, 14, 22, .94), rgba(5, 7, 12, .92));
+}
+.table-shell {
+  margin-top: 8px;
+  border-color: rgba(255,255,255,.065);
+}
+.poster-table th {
+  height: 36px;
+  font-size: 9px;
+  color: #8b91a1;
+}
+.poster-table td {
+  height: 46px;
+  font-size: 12px;
+}
+.player-cell { height: 46px; }
+.player-cell .avatar, .poster-table .avatar {
+  width: 29px;
+  height: 29px;
+  font-size: 9px;
+}
+.rank-cell span { font-size: 16px; }
+.points { font-size: 16px !important; }
+
+.tournament-tab {
+  margin-top: 14px;
+  padding: 16px;
+  border-color: rgba(255,255,255,.065);
+  background: linear-gradient(180deg, rgba(8, 12, 19, .82), rgba(4, 6, 11, .78));
+}
+.tournament-toolbar {
+  margin-top: 4px;
+  margin-bottom: 20px;
+  background: rgba(4, 6, 11, .58);
+}
+.tabs { gap: 10px; }
+.tab {
+  padding: 9px 12px;
+  font-size: 11px;
+}
+.summary-grid .stat-card {
+  min-height: 98px;
+}
+.match-card, .bye-card {
+  margin-bottom: 14px;
+  padding: 11px 12px;
+  border-color: rgba(255,255,255,.07);
+  background: rgba(5, 8, 13, .78);
+}
+.match-row { grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr); }
+.team .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 10px;
+}
+.team strong, .match-tag { font-size: 11px; }
+.score-display { font-size: 20px; }
+.btn-ghost, .btn-save, .btn-danger {
+  padding: 6px 9px;
+  font-size: 11px;
+}
+.session-label {
+  margin: 22px 0 12px;
+  font-size: 10px;
+}
