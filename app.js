@@ -443,7 +443,8 @@ function renderHighlights(containerId, stats, championships) {
   `).join("");
 }
 
-function posterRow(player, index, includeTournaments) {
+function posterRow(player, index) {
+  const goalBalance = `${player.gf}-${player.gc}`;
   const dif = `${player.dif > 0 ? "+" : ""}${player.dif}`;
   const difClass = player.dif > 0 ? "green" : player.dif < 0 ? "red" : "";
   return `
@@ -453,15 +454,12 @@ function posterRow(player, index, includeTournaments) {
         <span class="avatar" style="background:${getPlayerColor(player.id)}">${initials(player.name)}</span>
         <strong>${escapeHTML(player.name)}</strong>
       </td>
-      ${includeTournaments ? `<td>${player.tournaments}</td>` : ""}
       <td>${player.pj}</td>
       <td class="green">${player.v}</td>
       <td class="yellow">${player.e}</td>
       <td class="red">${player.p}</td>
-      <td>${player.gf}</td>
-      <td>${player.gc}</td>
+      <td>${goalBalance}</td>
       <td class="${difClass}">${dif}</td>
-      ${includeTournaments ? `<td>${player.cleanSheets}</td>` : ""}
       <td class="points">${player.pts}</td>
     </tr>
   `;
@@ -472,8 +470,8 @@ function renderGlobalStats() {
   const stats = buildStats(state.championships);
   renderHighlights("globalHighlights", stats, state.championships);
   document.getElementById("globalStandingsBody").innerHTML = stats.length
-    ? stats.map((player, index) => posterRow(player, index, true)).join("")
-    : `<tr><td colspan="12" class="empty-cell">No hay datos generales todavía.</td></tr>`;
+    ? stats.map((player, index) => posterRow(player, index)).join("")
+    : `<tr><td colspan="9" class="empty-cell">No hay datos generales todavía.</td></tr>`;
 }
 
 function renderPlayerPicker() {
@@ -617,7 +615,7 @@ function buildMatchCard(match) {
 function renderLocalTable() {
   const current = getCurrentChampionship();
   if (!current) {
-    document.getElementById("standingsBody").innerHTML = `<tr><td colspan="10" class="empty-cell">Selecciona o crea un torneo.</td></tr>`;
+    document.getElementById("standingsBody").innerHTML = `<tr><td colspan="9" class="empty-cell">Selecciona o crea un torneo.</td></tr>`;
     document.getElementById("localHighlights").innerHTML = "";
     return;
   }
@@ -627,8 +625,8 @@ function renderLocalTable() {
   document.getElementById("tableTournamentFormat").textContent = formatConfig(current.format).label;
   renderHighlights("localHighlights", standings, [current]);
   document.getElementById("standingsBody").innerHTML = standings.length
-    ? standings.map((player, index) => posterRow(player, index, false)).join("")
-    : `<tr><td colspan="10" class="empty-cell">Sin resultados todavía.</td></tr>`;
+    ? standings.map((player, index) => posterRow(player, index)).join("")
+    : `<tr><td colspan="9" class="empty-cell">Sin resultados todavía.</td></tr>`;
 }
 
 function renderPlayers() {
@@ -772,7 +770,22 @@ function switchTournamentTab(tab) {
   renderAll();
 }
 
+
 if (typeof window !== "undefined") {
+  Object.assign(window, {
+    showHomeView,
+    showCreateView,
+    showSelectView,
+    createChampionship,
+    selectChampionship,
+    addPlayerFromInput,
+    deletePlayer,
+    openEdit,
+    cancelEdit,
+    saveScore,
+    clearScore,
+    switchTournamentTab
+  });
   window.addEventListener("beforeunload", saveState);
 }
 
