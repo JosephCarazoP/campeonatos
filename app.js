@@ -8,7 +8,7 @@ const COLOR_PALETTE = [
 const FORMATS = {
   round_robin_single: { label: "Solo ida", type: "league", legs: 1, final: false, third: false },
   round_robin_double: { label: "Ida y vuelta", type: "league", legs: 2, final: false, third: false },
-  rr_double_final_third: { label: "Ida y vuelta + final + 4.º vs 5.º por tercero", type: "league", legs: 2, final: true, third: true },
+  rr_double_final_third: { label: "Ida y vuelta + final + 3.º vs 4.º por tercero", type: "league", legs: 2, final: true, third: true },
   rr_double_final: { label: "Ida y vuelta + final sin tercer lugar", type: "league", legs: 2, final: true, third: false },
   league_champion: { label: "Liga: el primero queda campeón", type: "league", legs: 1, final: false, third: false },
   champions_knockout: { label: "Tipo Champions: eliminación directa", type: "knockout", legs: 1, final: false, third: false }
@@ -251,14 +251,14 @@ function ensurePostLeagueMatches(championship) {
 
   const standings = buildStats([championship], championship.playerIds, { leagueOnly: true });
   let nextId = Math.max(0, ...championship.matches.map(match => match.id)) + 1;
-  if (config.third && standings[3] && standings[4]) {
+  if (config.third && standings[2] && standings[3]) {
     championship.matches.push({
       id: nextId++,
       stage: "third",
       round: 998,
       leg: 1,
-      homeId: standings[3].id,
-      awayId: standings[4].id,
+      homeId: standings[2].id,
+      awayId: standings[3].id,
       hs: null,
       as: null
     });
@@ -673,8 +673,8 @@ function createChampionship() {
     alert("Necesitas al menos 2 jugadores para crear un torneo.");
     return;
   }
-  if (format === "rr_double_final_third" && playerIds.length < 5) {
-    alert("Este formato necesita al menos 5 jugadores para disputar 4.º vs 5.º por tercer lugar.");
+  if (format === "rr_double_final_third" && playerIds.length < 4) {
+    alert("Este formato necesita al menos 4 jugadores para disputar 3.º vs 4.º por tercer lugar.");
     return;
   }
 
