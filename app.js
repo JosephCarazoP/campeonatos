@@ -1,288 +1,762 @@
-const AVATAR_COLORS = {
-  Isaac: "#00C6FF", Daniel: "#FF6B35",
-  Brenes: "#A855F7", Joseph: "#22C55E", Leo: "#FACC15"
+const STORAGE_KEY = "fifa26_championship_manager_v3";
+const LEGACY_STORAGE_KEYS = ["fifa26_championship_manager_v1", "fifa26_championship_manager_v2"];
+const COLOR_PALETTE = [
+  "#2F80ED", "#27D36F", "#8B5CF6", "#FF6B35", "#FACC15", "#EC4899",
+  "#14B8A6", "#38BDF8", "#F43F5E", "#84CC16", "#D946EF", "#A3E635",
+  "#FB7185", "#22D3EE", "#C084FC", "#F97316", "#10B981", "#EAB308"
+];
+const FORMATS = {
+  round_robin_single: { label: "Solo ida", type: "league", legs: 1, final: false, third: false },
+  round_robin_double: { label: "Ida y vuelta", type: "league", legs: 2, final: false, third: false },
+  rr_double_final_third: { label: "Ida y vuelta + final + 4.º vs 5.º por tercero", type: "league", legs: 2, final: true, third: true },
+  rr_double_final: { label: "Ida y vuelta + final sin tercer lugar", type: "league", legs: 2, final: true, third: false },
+  league_champion: { label: "Liga: el primero queda campeón", type: "league", legs: 1, final: false, third: false },
+  champions_knockout: { label: "Tipo Champions: eliminación directa", type: "knockout", legs: 1, final: false, third: false }
 };
 
-const PLAYERS = ["Isaac", "Daniel", "Brenes", "Joseph", "Leo"];
+let state = loadState();
+let currentView = "home";
+let activeTournamentTab = "matches";
+let editingMatchId = null;
 
-// ida = partidos originales
-let matches = [
-  { id: 1,  home: "Joseph", away: "Brenes", hs: null, as: null, session: "5pm" },
-  { id: 2,  home: "Isaac",  away: "Daniel", hs: 3,    as: 3,    session: "5pm" },
-  { id: 3,  home: "Isaac",  away: "Brenes", hs: null, as: null, session: "5pm" },
-  { id: 4,  home: "Daniel", away: "Joseph", hs: null, as: null, session: "5pm" },
-  { id: 5,  home: "Isaac",  away: "Joseph", hs: null, as: null, session: "5pm" },
-  { id: 6,  home: "Brenes", away: "Daniel", hs: null, as: null, session: "5pm" },
-  { id: 7,  home: "Isaac",  away: "Leo",    hs: null, as: null, session: "7pm" },
-  { id: 8,  home: "Leo",    away: "Brenes", hs: null, as: null, session: "7pm" },
-  { id: 9,  home: "Daniel", away: "Leo",    hs: null, as: null, session: "7pm" },
-  { id: 10, home: "Joseph", away: "Leo",    hs: null, as: null, session: "7pm" },
-];
-
-// vuelta: se generan dinámicamente (home/away invertidos de ida)
-// Para el caso sin Leo, las vueltas son solo los 6 partidos entre los 4
-const VUELTA_BASE = [
-  { id: 11, home: "Brenes", away: "Joseph", hs: null, as: null, session: "vuelta" },
-  { id: 12, home: "Daniel", away: "Isaac",  hs: null, as: null, session: "vuelta" },
-  { id: 13, home: "Brenes", away: "Isaac",  hs: null, as: null, session: "vuelta" },
-  { id: 14, home: "Joseph", away: "Daniel", hs: null, as: null, session: "vuelta" },
-  { id: 15, home: "Joseph", away: "Isaac",  hs: null, as: null, session: "vuelta" },
-  { id: 16, home: "Daniel", away: "Brenes", hs: null, as: null, session: "vuelta" },
-];
-
-const VUELTA_LEO = [
-  { id: 11, home: "Leo",    away: "Isaac",  hs: null, as: null, session: "vuelta" },
-  { id: 12, home: "Brenes", away: "Leo",    hs: null, as: null, session: "vuelta" },
-  { id: 13, home: "Leo",    away: "Daniel", hs: null, as: null, session: "vuelta" },
-  { id: 14, home: "Leo",    away: "Joseph", hs: null, as: null, session: "vuelta" },
-  { id: 15, home: "Brenes", away: "Joseph", hs: null, as: null, session: "vuelta" },
-  { id: 16, home: "Daniel", away: "Isaac",  hs: null, as: null, session: "vuelta" },
-  { id: 17, home: "Brenes", away: "Isaac",  hs: null, as: null, session: "vuelta" },
-  { id: 18, home: "Joseph", away: "Daniel", hs: null, as: null, session: "vuelta" },
-  { id: 19, home: "Joseph", away: "Isaac",  hs: null, as: null, session: "vuelta" },
-  { id: 20, home: "Daniel", away: "Brenes", hs: null, as: null, session: "vuelta" },
-];
-
-let vueltaMatches = [];
-let leoStatus = null; // null | 'yes' | 'no'
-let editing = null;
-
-function initials(name) { return name.slice(0, 2).toUpperCase(); }
-
-function allMatches() { return [...matches, ...vueltaMatches]; }
-
-function calcStandings() {
-  const activePlayers = leoStatus === 'no'
-    ? PLAYERS.filter(p => p !== "Leo")
-    : PLAYERS;
-
-  const t = {};
-  activePlayers.forEach(p => t[p] = { pj:0, v:0, e:0, d:0, ga:0, gr:0, pts:0 });
-
-  allMatches().forEach(({ home, away, hs, as: awayS }) => {
-    if (hs === null || awayS === null) return;
-    if (!t[home] || !t[away]) return;
-    t[home].pj++; t[away].pj++;
-    t[home].ga += hs; t[home].gr += awayS;
-    t[away].ga += awayS; t[away].gr += hs;
-    if (hs > awayS)       { t[home].v++; t[away].d++; t[home].pts += 3; }
-    else if (hs < awayS)  { t[away].v++; t[home].d++; t[away].pts += 3; }
-    else                  { t[home].e++; t[away].e++; t[home].pts++; t[away].pts++; }
-  });
-
-  return activePlayers.map(name => ({ name, ...t[name], dif: t[name].ga - t[name].gr }))
-    .sort((a, b) => b.pts - a.pts || b.dif - a.dif || b.ga - a.ga);
+function uid(prefix) {
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// ── LEO STATUS ─────────────────────────────────────────────────────────────
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"]/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[char]));
+}
 
-function setLeoStatus(status) {
-  leoStatus = status;
+function normalizeName(name) {
+  return String(name || "").trim().replace(/\s+/g, " ");
+}
 
-  // Update banner buttons style
-  document.querySelector('.btn-leo-yes').classList.toggle('active', status === 'yes');
-  document.querySelector('.btn-leo-no').classList.toggle('active', status === 'no');
+function initials(name) {
+  return normalizeName(name)
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0])
+    .join("")
+    .toUpperCase() || "?";
+}
 
-  if (status === 'no') {
-    // WO 3-0: whoever plays against Leo, that player wins 3-0
-    // home vs Leo → home wins 3-0; Leo vs away → away wins 3-0
-    matches = matches.map(m => {
-      if (m.home === 'Leo') return { ...m, hs: 0, as: 3 };
-      if (m.away === 'Leo') return { ...m, hs: 3, as: 0 };
-      return m;
-    });
-    vueltaMatches = VUELTA_BASE.map(m => ({ ...m }));
-
-    document.getElementById('leoSessionLabel').style.display = 'none';
-    document.getElementById('session2').style.display = 'none';
-    document.getElementById('vueltaSection').style.display = 'block';
-  } else {
-    // Leo sí llega — clear WO scores on Leo matches
-    matches = matches.map(m => {
-      const wasWO = (m.home === 'Leo' && m.hs === 0 && m.as === 3) ||
-                   (m.away === 'Leo' && m.hs === 3 && m.as === 0);
-      if (wasWO) return { ...m, hs: null, as: null };
-      return m;
-    });
-    vueltaMatches = VUELTA_LEO.map(m => ({ ...m }));
-
-    document.getElementById('leoSessionLabel').style.display = 'flex';
-    document.getElementById('session2').style.display = 'block';
-    document.getElementById('vueltaSection').style.display = 'block';
-    document.getElementById('leoSessionText').textContent = 'Desde las 7:00 PM — 🦁 Leo presente';
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved && Array.isArray(saved.players) && Array.isArray(saved.championships)) return saved;
+  } catch (error) {
+    console.warn("No se pudo leer el estado guardado", error);
   }
 
-  renderMatches();
-  renderTable();
+  LEGACY_STORAGE_KEYS.forEach(key => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn("No se pudo limpiar el estado anterior", error);
+    }
+  });
+
+  return { players: [], championships: [], currentChampionshipId: null };
 }
 
-// ── RENDER ──────────────────────────────────────────────────────────────────
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getCurrentChampionship() {
+  return state.championships.find(championship => championship.id === state.currentChampionshipId) || null;
+}
+
+function getPlayer(playerId) {
+  return state.players.find(player => player.id === playerId) || null;
+}
+
+function getPlayerName(playerId) {
+  return getPlayer(playerId)?.name || "Jugador eliminado";
+}
+
+function getPlayerColor(playerId) {
+  return getPlayer(playerId)?.color || "#64748B";
+}
+
+function formatConfig(format) {
+  return FORMATS[format] || FORMATS.round_robin_double;
+}
+
+function nextAvailableColor() {
+  const used = new Set(state.players.map(player => player.color));
+  const available = COLOR_PALETTE.find(color => !used.has(color));
+  if (available) return available;
+
+  let hue = Math.floor(Math.random() * 360);
+  let color = `hsl(${hue}, 78%, 55%)`;
+  while (used.has(color)) {
+    hue = (hue + 41) % 360;
+    color = `hsl(${hue}, 78%, 55%)`;
+  }
+  return color;
+}
+
+function findOrCreatePlayer(name) {
+  const normalized = normalizeName(name);
+  if (!normalized) return null;
+  const existing = state.players.find(player => player.name.toLowerCase() === normalized.toLowerCase());
+  if (existing) return existing;
+
+  const player = { id: uid("player"), name: normalized, color: nextAvailableColor() };
+  state.players.push(player);
+  return player;
+}
+
+function shuffle(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function createChampionshipData(name, format, playerIds) {
+  const config = formatConfig(format);
+  const data = config.type === "knockout"
+    ? generateKnockout(playerIds)
+    : generateLeague(playerIds, config.legs);
+
+  return {
+    id: uid("champ"),
+    name,
+    format,
+    playerIds,
+    createdAt: new Date().toISOString(),
+    matches: data.matches,
+    byes: data.byes
+  };
+}
+
+function generateLeague(playerIds, legs) {
+  const rotating = shuffle(playerIds);
+  if (rotating.length % 2 === 1) rotating.push(null);
+
+  const totalRounds = rotating.length - 1;
+  const half = rotating.length / 2;
+  const matches = [];
+  const byes = [];
+  let matchNumber = 1;
+  let roundPlayers = [...rotating];
+
+  for (let round = 1; round <= totalRounds; round += 1) {
+    const roundMatches = [];
+    for (let i = 0; i < half; i += 1) {
+      const a = roundPlayers[i];
+      const b = roundPlayers[roundPlayers.length - 1 - i];
+      if (!a || !b) {
+        const restingPlayerId = a || b;
+        if (restingPlayerId) byes.push({ round, leg: 1, playerId: restingPlayerId });
+        continue;
+      }
+      const swap = (round + i) % 2 === 0;
+      roundMatches.push({
+        id: matchNumber++,
+        stage: "league",
+        round,
+        leg: 1,
+        homeId: swap ? b : a,
+        awayId: swap ? a : b,
+        hs: null,
+        as: null
+      });
+    }
+    shuffle(roundMatches).forEach(match => matches.push(match));
+    roundPlayers = [roundPlayers[0], roundPlayers[roundPlayers.length - 1], ...roundPlayers.slice(1, -1)];
+  }
+
+  if (Number(legs) === 2) {
+    const firstLeg = [...matches];
+    firstLeg.forEach(match => {
+      matches.push({
+        id: matchNumber++,
+        stage: "league",
+        round: match.round + totalRounds,
+        leg: 2,
+        homeId: match.awayId,
+        awayId: match.homeId,
+        hs: null,
+        as: null
+      });
+    });
+    byes.filter(bye => bye.leg === 1).forEach(bye => {
+      byes.push({ round: bye.round + totalRounds, leg: 2, playerId: bye.playerId });
+    });
+  }
+
+  return { matches, byes };
+}
+
+function generateKnockout(playerIds) {
+  return { matches: buildKnockoutRound(shuffle(playerIds), 1, 1), byes: [] };
+}
+
+function buildKnockoutRound(playerIds, round, startId) {
+  const shuffled = shuffle(playerIds);
+  const matches = [];
+  for (let i = 0; i < shuffled.length; i += 2) {
+    if (!shuffled[i + 1]) continue;
+    matches.push({
+      id: startId + matches.length,
+      stage: "knockout",
+      round,
+      leg: 1,
+      homeId: shuffled[i],
+      awayId: shuffled[i + 1],
+      hs: null,
+      as: null
+    });
+  }
+  return matches;
+}
+
+function leagueMatches(championship) {
+  return championship.matches.filter(match => match.stage === "league");
+}
+
+function played(match) {
+  return match.hs !== null && match.as !== null;
+}
+
+function winnerOf(match) {
+  if (!played(match) || match.hs === match.as) return null;
+  return match.hs > match.as ? match.homeId : match.awayId;
+}
+
+function isLeagueComplete(championship) {
+  const matches = leagueMatches(championship);
+  return matches.length > 0 && matches.every(played);
+}
+
+function ensurePostLeagueMatches(championship) {
+  const config = formatConfig(championship.format);
+  if (config.type !== "league") return;
+  if (!config.final && !config.third) return;
+
+  championship.matches = championship.matches.filter(match => !["final", "third"].includes(match.stage));
+  if (!isLeagueComplete(championship)) return;
+
+  const standings = buildStats([championship], championship.playerIds, { leagueOnly: true });
+  let nextId = Math.max(0, ...championship.matches.map(match => match.id)) + 1;
+  if (config.third && standings[3] && standings[4]) {
+    championship.matches.push({
+      id: nextId++,
+      stage: "third",
+      round: 998,
+      leg: 1,
+      homeId: standings[3].id,
+      awayId: standings[4].id,
+      hs: null,
+      as: null
+    });
+  }
+  if (config.final && standings[0] && standings[1]) {
+    championship.matches.push({
+      id: nextId,
+      stage: "final",
+      round: 999,
+      leg: 1,
+      homeId: standings[0].id,
+      awayId: standings[1].id,
+      hs: null,
+      as: null
+    });
+  }
+}
+
+function ensureKnockoutProgress(championship) {
+  if (formatConfig(championship.format).type !== "knockout") return;
+  const rounds = [...new Set(championship.matches.map(match => match.round))].sort((a, b) => a - b);
+  const lastRound = rounds[rounds.length - 1] || 1;
+  const lastMatches = championship.matches.filter(match => match.round === lastRound);
+  if (!lastMatches.length || lastMatches.some(match => !winnerOf(match))) return;
+  if (lastMatches.length === 1) return;
+  if (championship.matches.some(match => match.round === lastRound + 1)) return;
+
+  const winners = lastMatches.map(winnerOf);
+  const nextMatches = buildKnockoutRound(winners, lastRound + 1, Math.max(...championship.matches.map(match => match.id)) + 1);
+  championship.matches.push(...nextMatches);
+}
+
+function syncDerivedMatches(championship) {
+  if (!championship) return;
+  ensurePostLeagueMatches(championship);
+  ensureKnockoutProgress(championship);
+}
+
+function matchesForStats(championship, options = {}) {
+  return championship.matches.filter(match => {
+    if (options.leagueOnly && match.stage !== "league") return false;
+    return played(match);
+  });
+}
+
+function buildStats(championships, playerIds = null, options = {}) {
+  const ids = playerIds || [...new Set(championships.flatMap(championship => championship.playerIds))];
+  const stats = {};
+  ids.forEach(id => {
+    stats[id] = {
+      id,
+      name: getPlayerName(id),
+      tournaments: 0,
+      pj: 0,
+      v: 0,
+      e: 0,
+      p: 0,
+      gf: 0,
+      gc: 0,
+      cleanSheets: 0,
+      pts: 0
+    };
+  });
+
+  championships.forEach(championship => {
+    championship.playerIds.forEach(id => {
+      if (stats[id]) stats[id].tournaments += 1;
+    });
+    matchesForStats(championship, options).forEach(match => {
+      if (!stats[match.homeId] || !stats[match.awayId]) return;
+      const home = stats[match.homeId];
+      const away = stats[match.awayId];
+      home.pj += 1;
+      away.pj += 1;
+      home.gf += match.hs;
+      home.gc += match.as;
+      away.gf += match.as;
+      away.gc += match.hs;
+      if (match.as === 0) home.cleanSheets += 1;
+      if (match.hs === 0) away.cleanSheets += 1;
+
+      if (match.hs > match.as) {
+        home.v += 1;
+        away.p += 1;
+        home.pts += 3;
+      } else if (match.hs < match.as) {
+        away.v += 1;
+        home.p += 1;
+        away.pts += 3;
+      } else {
+        home.e += 1;
+        away.e += 1;
+        home.pts += 1;
+        away.pts += 1;
+      }
+    });
+  });
+
+  return Object.values(stats)
+    .map(player => ({
+      ...player,
+      dif: player.gf - player.gc,
+      consistency: player.pj ? (player.v + player.e) / player.pj : 0
+    }))
+    .sort((a, b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf || a.name.localeCompare(b.name));
+}
+
+function championshipStatus(championship) {
+  syncDerivedMatches(championship);
+  const config = formatConfig(championship.format);
+  const allPlayed = championship.matches.length > 0 && championship.matches.every(played);
+  if (config.type === "knockout") {
+    const finalMatch = championship.matches.filter(match => match.stage === "knockout").sort((a, b) => b.round - a.round)[0];
+    return finalMatch && championship.matches.filter(match => match.round === finalMatch.round).length === 1 && played(finalMatch) ? "Finalizado" : "En juego";
+  }
+  if ((config.final || config.third) && isLeagueComplete(championship)) return allPlayed ? "Finalizado" : "Finales pendientes";
+  return allPlayed ? "Finalizado" : "En juego";
+}
+
+function championName(championship) {
+  syncDerivedMatches(championship);
+  const config = formatConfig(championship.format);
+  const finalMatch = championship.matches.find(match => match.stage === "final")
+    || (config.type === "knockout" ? championship.matches.filter(match => match.stage === "knockout").sort((a, b) => b.round - a.round)[0] : null);
+  const finalWinner = finalMatch ? winnerOf(finalMatch) : null;
+  if (finalWinner) return getPlayerName(finalWinner);
+  const standings = buildStats([championship], championship.playerIds, { leagueOnly: config.final || config.third });
+  return standings[0]?.name || "—";
+}
+
+function highlights(stats, championships = state.championships) {
+  const withGames = stats.filter(player => player.pj > 0);
+  const finished = championships.filter(championship => championshipStatus(championship) === "Finalizado").length;
+  const allMatches = championships.flatMap(championship => championship.matches || []);
+  const playedCount = allMatches.filter(played).length;
+  const totalGoals = allMatches.reduce((sum, match) => played(match) ? sum + match.hs + match.as : sum, 0);
+
+  if (!withGames.length) return [
+    { icon: "🏆", label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
+    { icon: "⚽", label: "Partidos", value: playedCount, sub: `${allMatches.length} programados` },
+    { icon: "🥅", label: "Goles", value: totalGoals, sub: "Total anotado" },
+    { icon: "🔥", label: "Más victorias", value: "—", sub: "Sin partidos" },
+    { icon: "🎯", label: "Goleador", value: "—", sub: "Sin goles" },
+    { icon: "🧤", label: "Porterías", value: "—", sub: "Sin datos" }
+  ];
+
+  const byWins = [...withGames].sort((a, b) => b.v - a.v || b.pts - a.pts)[0];
+  const byGoals = [...withGames].sort((a, b) => b.gf - a.gf || b.v - a.v)[0];
+  const byCleanSheets = [...withGames].sort((a, b) => b.cleanSheets - a.cleanSheets || b.v - a.v)[0];
+  return [
+    { icon: "🏆", label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
+    { icon: "⚽", label: "Partidos", value: playedCount, sub: `${allMatches.length} programados` },
+    { icon: "🥅", label: "Goles", value: totalGoals, sub: "Total anotado" },
+    { icon: "🔥", label: "Más victorias", value: byWins.name, sub: `${byWins.v} ganados` },
+    { icon: "🎯", label: "Goleador", value: byGoals.name, sub: `${byGoals.gf} goles` },
+    { icon: "🧤", label: "Porterías", value: byCleanSheets.name, sub: `${byCleanSheets.cleanSheets} en cero` }
+  ];
+}
+
+function renderHeader() {
+  const current = getCurrentChampionship();
+  document.getElementById("appTitle").textContent = currentView === "tournament" && current ? current.name.toUpperCase() : "TORNEO";
+  document.getElementById("appSubtitle").textContent = currentView === "tournament" && current
+    ? `${formatConfig(current.format).label} · ${current.playerIds.length} jugadores · ${championshipStatus(current)}`
+    : "Familia palmeña · Champions League de amigos";
+  const matches = currentView === "tournament" && current ? current.matches : state.championships.flatMap(championship => championship.matches);
+  const total = matches.length;
+  const done = matches.filter(played).length;
+  document.getElementById("progressPill").textContent = `${done} / ${total} partidos jugados`;
+}
+
+function renderHighlights(containerId, stats, championships) {
+  document.getElementById(containerId).innerHTML = highlights(stats, championships).map(item => `
+    <article class="stat-card">
+      <div class="stat-icon">${item.icon}</div>
+      <div>
+        <span>${escapeHTML(item.label)}</span>
+        <strong>${escapeHTML(item.value)}</strong>
+        <small>${escapeHTML(item.sub)}</small>
+      </div>
+    </article>
+  `).join("");
+}
+
+function posterRow(player, index, includeTournaments) {
+  const dif = `${player.dif > 0 ? "+" : ""}${player.dif}`;
+  const difClass = player.dif > 0 ? "green" : player.dif < 0 ? "red" : "";
+  return `
+    <tr>
+      <td class="rank-cell"><span>${index + 1}</span></td>
+      <td class="player-cell">
+        <span class="avatar" style="background:${getPlayerColor(player.id)}">${initials(player.name)}</span>
+        <strong>${escapeHTML(player.name)}</strong>
+      </td>
+      ${includeTournaments ? `<td>${player.tournaments}</td>` : ""}
+      <td>${player.pj}</td>
+      <td class="green">${player.v}</td>
+      <td class="yellow">${player.e}</td>
+      <td class="red">${player.p}</td>
+      <td>${player.gf}</td>
+      <td>${player.gc}</td>
+      <td class="${difClass}">${dif}</td>
+      ${includeTournaments ? `<td>${player.cleanSheets}</td>` : ""}
+      <td class="points">${player.pts}</td>
+    </tr>
+  `;
+}
+
+function renderGlobalStats() {
+  state.championships.forEach(syncDerivedMatches);
+  const stats = buildStats(state.championships);
+  renderHighlights("globalHighlights", stats, state.championships);
+  document.getElementById("globalStandingsBody").innerHTML = stats.length
+    ? stats.map((player, index) => posterRow(player, index, true)).join("")
+    : `<tr><td colspan="12" class="empty-cell">No hay datos generales todavía.</td></tr>`;
+}
+
+function renderPlayerPicker() {
+  const picker = document.getElementById("playerPicker");
+  if (!state.players.length) {
+    picker.innerHTML = `<div class="empty-state compact">No hay jugadores guardados todavía. Agrega nombres abajo para crear el primer torneo.</div>`;
+    return;
+  }
+  picker.innerHTML = state.players.map(player => `
+    <label class="player-chip">
+      <input type="checkbox" value="${player.id}" checked />
+      <span class="avatar small" style="background:${player.color}">${initials(player.name)}</span>
+      ${escapeHTML(player.name)}
+    </label>
+  `).join("");
+}
+
+function renderChampionshipList() {
+  const list = document.getElementById("championshipList");
+  if (!state.championships.length) {
+    list.innerHTML = `<div class="empty-state">Todavía no hay torneos guardados.</div>`;
+    return;
+  }
+
+  list.innerHTML = state.championships.map(championship => {
+    const done = championship.matches.filter(played).length;
+    const total = championship.matches.length;
+    return `
+      <article class="championship-card" onclick="selectChampionship('${championship.id}')">
+        <div>
+          <span>${escapeHTML(championshipStatus(championship))}</span>
+          <h3>${escapeHTML(championship.name)}</h3>
+          <p>${escapeHTML(formatConfig(championship.format).label)} · ${championship.playerIds.length} jugadores · ${done}/${total} partidos</p>
+          <small>Campeón / líder: ${escapeHTML(championName(championship))}</small>
+        </div>
+        <button class="btn-secondary" type="button">Abrir</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderTournamentSummary() {
+  const current = getCurrentChampionship();
+  if (!current) {
+    document.getElementById("tournamentSummary").innerHTML = "";
+    return;
+  }
+  const standings = buildStats([current], current.playerIds);
+  const done = current.matches.filter(played).length;
+  document.getElementById("tournamentSummary").innerHTML = `
+    <article class="stat-card"><div class="stat-icon">📌</div><div><span>Estado</span><strong>${championshipStatus(current)}</strong><small>${done}/${current.matches.length} partidos</small></div></article>
+    <article class="stat-card"><div class="stat-icon">⚙️</div><div><span>Formato</span><strong>${escapeHTML(formatConfig(current.format).label)}</strong><small>${current.playerIds.length} jugadores</small></div></article>
+    <article class="stat-card"><div class="stat-icon">👑</div><div><span>Líder</span><strong>${escapeHTML(standings[0]?.name || "—")}</strong><small>${standings[0]?.pts || 0} pts</small></div></article>
+    <article class="stat-card"><div class="stat-icon">🏁</div><div><span>Campeón</span><strong>${escapeHTML(championName(current))}</strong><small>Actualizado en vivo</small></div></article>
+  `;
+}
+
+function stageTitle(match) {
+  if (match.stage === "final") return "Final";
+  if (match.stage === "third") return "Tercer lugar";
+  if (match.stage === "knockout") return match.round === 1 ? "Eliminación directa" : `Ronda ${match.round}`;
+  return `${match.leg === 2 ? "Vuelta" : "Ida"} · Jornada ${match.round}`;
+}
 
 function renderMatches() {
-  const s1 = document.getElementById("session1");
-  const s2 = document.getElementById("session2");
-  const sv = document.getElementById("sessionVuelta");
-  s1.innerHTML = ""; s2.innerHTML = ""; sv.innerHTML = "";
-
-  matches.filter(m => m.session === "5pm").forEach(m => s1.appendChild(buildCard(m)));
-
-  if (leoStatus !== 'no') {
-    matches.filter(m => m.session === "7pm").forEach(m => s2.appendChild(buildCard(m)));
+  const current = getCurrentChampionship();
+  const container = document.getElementById("matchesContainer");
+  if (!current) {
+    container.innerHTML = `<div class="empty-state">Selecciona un torneo para ver partidos.</div>`;
+    return;
   }
-
-  vueltaMatches.forEach(m => sv.appendChild(buildCard(m)));
-
-  updateProgress();
-}
-
-function buildCard(m) {
-  const played = m.hs !== null;
-  const isEdit = editing === m.id;
-  const isWO   = leoStatus === 'no' && (m.home === 'Leo' || m.away === 'Leo');
-
-  let homeClass = "", awayClass = "";
-  if (played) {
-    if (m.hs > m.as)       { homeClass = "win"; awayClass = "loss"; }
-    else if (m.hs < m.as)  { homeClass = "loss"; awayClass = "win"; }
-    else                   { homeClass = "draw"; awayClass = "draw"; }
-  }
-
-  const card = document.createElement("div");
-  card.className = "card" + (played ? " played" : "") + (isWO ? " wo-card" : "");
-
-  let scoreHtml;
-  if (isEdit) {
-    scoreHtml = `
-      <div class="edit-row">
-        <input class="score-input" id="inputHome" type="number" min="0" max="99" value="${m.hs !== null ? m.hs : ""}" />
-        <span class="score-dash">-</span>
-        <input class="score-input" id="inputAway" type="number" min="0" max="99" value="${m.as !== null ? m.as : ""}" />
-      </div>`;
-  } else if (played) {
-    scoreHtml = `
-      <div class="score-display">
-        <span class="score-num ${homeClass === 'win' ? 'win' : ''}">${m.hs}</span>
-        <span class="score-dash">-</span>
-        <span class="score-num ${awayClass === 'win' ? 'win' : ''}">${m.as}</span>
-      </div>`;
-  } else {
-    scoreHtml = `<span class="vs-text">VS</span>`;
-  }
-
-  let btnsHtml = "";
-  if (isWO) {
-    btnsHtml = `<span class="wo-label">🚫 W.O. — Leo no llegó</span>`;
-  } else if (isEdit) {
-    btnsHtml = `
-      <button class="btn btn-save" onclick="saveScore(${m.id})">✓ Guardar</button>
-      <button class="btn btn-cancel" onclick="cancelEdit()">✕</button>`;
-  } else {
-    btnsHtml = `<button class="btn btn-edit" onclick="openEdit(${m.id})">${played ? "✏️ Editar" : "⚽ Ingresar resultado"}</button>`;
-    if (played) btnsHtml += `<button class="btn btn-clear" onclick="clearScore(${m.id})">🗑</button>`;
-  }
-
-  const vueltaTag = m.session === 'vuelta' ? `<span class="vuelta-tag">VUELTA</span>` : '';
-
-  card.innerHTML = `
-    <div class="match-num">#${m.id} ${vueltaTag}</div>
-    <div class="match-row">
-      <div class="team right">
-        <span class="team-name ${homeClass}">${m.home}</span>
-        <div class="avatar" style="background:${AVATAR_COLORS[m.home]}">${initials(m.home)}</div>
-      </div>
-      <div class="score-area">${scoreHtml}</div>
-      <div class="team">
-        <div class="avatar" style="background:${AVATAR_COLORS[m.away]}">${initials(m.away)}</div>
-        <span class="team-name ${awayClass}">${m.away}</span>
-      </div>
-    </div>
-    <div class="actions">${btnsHtml}</div>
-  `;
-
-  return card;
-}
-
-function renderTable() {
-  const standings = calcStandings();
-  const medals = ["🥇", "🥈", "🥉"];
-  const body = document.getElementById("standingsBody");
-  body.innerHTML = "";
-
-  standings.forEach((p, i) => {
-    const difColor = p.dif > 0 ? "#22C55E" : p.dif < 0 ? "#FF6B35" : "#aaa";
-    const difStr = (p.dif > 0 ? "+" : "") + p.dif;
-    const row = document.createElement("div");
-    row.className = "standing-row table-grid" + (i < 3 ? " top" : "");
-    row.innerHTML = `
-      <span class="rank">${medals[i] || (i + 1)}</span>
-      <div class="avatar-sm" style="background:${AVATAR_COLORS[p.name]}">${initials(p.name)}</div>
-      <span class="player-name">${p.name}</span>
-      <span class="col">${p.pj}</span>
-      <span class="col green">${p.v}</span>
-      <span class="col yellow-c">${p.e}</span>
-      <span class="col red">${p.d}</span>
-      <span class="col">${p.ga}</span>
-      <span class="col">${p.gr}</span>
-      <span class="col" style="color:${difColor}">${difStr}</span>
-      <span class="pts-col">${p.pts}</span>
+  syncDerivedMatches(current);
+  const groups = [...new Set(current.matches.map(match => `${match.stage}-${match.round}`))];
+  container.innerHTML = groups.map(key => {
+    const matches = current.matches.filter(match => `${match.stage}-${match.round}` === key);
+    const first = matches[0];
+    const bye = current.byes?.find(item => item.round === first.round && item.leg === first.leg);
+    return `
+      <div class="session-label"><span class="dot ${first.leg === 2 || first.stage !== "league" ? "pink" : ""}"></span>${stageTitle(first)}</div>
+      ${bye ? buildByeCard(bye) : ""}
+      ${matches.map(buildMatchCard).join("")}
     `;
-    body.appendChild(row);
+  }).join("");
+}
+
+function buildByeCard(bye) {
+  return `
+    <article class="bye-card">
+      <span class="avatar small" style="background:${getPlayerColor(bye.playerId)}">${initials(getPlayerName(bye.playerId))}</span>
+      <strong>${escapeHTML(getPlayerName(bye.playerId))}</strong> descansa esta jornada por cantidad impar de jugadores.
+    </article>
+  `;
+}
+
+function buildMatchCard(match) {
+  const isEdit = editingMatchId === match.id;
+  const isPlayed = played(match);
+  const homeClass = isPlayed ? (match.hs > match.as ? "win" : match.hs < match.as ? "loss" : "draw") : "";
+  const awayClass = isPlayed ? (match.as > match.hs ? "win" : match.as < match.hs ? "loss" : "draw") : "";
+  const scoreHtml = isEdit ? `
+    <div class="edit-row">
+      <input class="score-input" id="inputHome" type="number" min="0" max="99" value="${isPlayed ? match.hs : ""}" />
+      <span>-</span>
+      <input class="score-input" id="inputAway" type="number" min="0" max="99" value="${isPlayed ? match.as : ""}" />
+    </div>` : isPlayed ? `
+    <div class="score-display"><strong class="${homeClass}">${match.hs}</strong><span>-</span><strong class="${awayClass}">${match.as}</strong></div>` : `<span class="vs-text">VS</span>`;
+  const buttons = isEdit ? `
+    <button class="btn-save" onclick="saveScore(${match.id})">Guardar</button>
+    <button class="btn-ghost" onclick="cancelEdit()">Cancelar</button>` : `
+    <button class="btn-ghost" onclick="openEdit(${match.id})">${isPlayed ? "Editar" : "Ingresar resultado"}</button>
+    ${isPlayed ? `<button class="btn-danger" onclick="clearScore(${match.id})">Borrar</button>` : ""}`;
+
+  return `
+    <article class="match-card ${isPlayed ? "played" : ""}">
+      <div class="match-tag">#${match.id} · ${stageTitle(match)}</div>
+      <div class="match-row">
+        <div class="team right">
+          <strong class="${homeClass}">${escapeHTML(getPlayerName(match.homeId))}</strong>
+          <span class="avatar" style="background:${getPlayerColor(match.homeId)}">${initials(getPlayerName(match.homeId))}</span>
+        </div>
+        <div class="score-area">${scoreHtml}</div>
+        <div class="team">
+          <span class="avatar" style="background:${getPlayerColor(match.awayId)}">${initials(getPlayerName(match.awayId))}</span>
+          <strong class="${awayClass}">${escapeHTML(getPlayerName(match.awayId))}</strong>
+        </div>
+      </div>
+      <div class="actions">${buttons}</div>
+    </article>
+  `;
+}
+
+function renderLocalTable() {
+  const current = getCurrentChampionship();
+  if (!current) {
+    document.getElementById("standingsBody").innerHTML = `<tr><td colspan="10" class="empty-cell">Selecciona o crea un torneo.</td></tr>`;
+    document.getElementById("localHighlights").innerHTML = "";
+    return;
+  }
+  syncDerivedMatches(current);
+  const standings = buildStats([current], current.playerIds);
+  document.getElementById("tableTournamentName").textContent = current.name;
+  document.getElementById("tableTournamentFormat").textContent = formatConfig(current.format).label;
+  renderHighlights("localHighlights", standings, [current]);
+  document.getElementById("standingsBody").innerHTML = standings.length
+    ? standings.map((player, index) => posterRow(player, index, false)).join("")
+    : `<tr><td colspan="10" class="empty-cell">Sin resultados todavía.</td></tr>`;
+}
+
+function renderPlayers() {
+  document.getElementById("playersList").innerHTML = state.players.length
+    ? state.players.map(player => `
+      <article class="player-row">
+        <div class="player-row-main">
+          <span class="avatar" style="background:${player.color}">${initials(player.name)}</span>
+          <div><strong>${escapeHTML(player.name)}</strong><small>${player.color}</small></div>
+        </div>
+        <button class="btn-danger" onclick="deletePlayer('${player.id}')">Eliminar</button>
+      </article>
+    `).join("")
+    : `<div class="empty-state compact">No hay jugadores todavía.</div>`;
+}
+
+function renderAll() {
+  renderHeader();
+  renderGlobalStats();
+  renderPlayerPicker();
+  renderChampionshipList();
+  renderTournamentSummary();
+  renderMatches();
+  renderLocalTable();
+  renderPlayers();
+  saveState();
+}
+
+function showView(view) {
+  currentView = view;
+  ["home", "create", "select", "tournament"].forEach(name => {
+    document.getElementById(`${name}View`).style.display = name === view ? "block" : "none";
   });
+  renderAll();
 }
 
-function updateProgress() {
-  const all = allMatches();
-  const total = leoStatus === 'no'
-    ? all.filter(m => m.home !== 'Leo' && m.away !== 'Leo').length
-    : all.length;
-  const played = all.filter(m => m.hs !== null && m.home !== 'Leo' && m.away !== 'Leo').length
-    + (leoStatus === 'no' ? 0 : all.filter(m => (m.home === 'Leo' || m.away === 'Leo') && m.hs !== null).length);
+function showHomeView() { showView("home"); }
+function showCreateView() { showView("create"); }
+function showSelectView() { showView("select"); }
 
-  const realTotal = leoStatus === 'no' ? all.filter(m => m.home !== 'Leo' && m.away !== 'Leo').length : all.length;
-  const realPlayed = all.filter(m => m.hs !== null).length - (leoStatus === 'no' ? 0 : 0);
+function createChampionship() {
+  const name = normalizeName(document.getElementById("championshipName").value) || `Torneo ${state.championships.length + 1}`;
+  const format = document.getElementById("championshipFormat").value;
+  const selectedIds = [...document.querySelectorAll("#playerPicker input:checked")].map(input => input.value);
+  const newNames = document.getElementById("championshipNewPlayers").value
+    .split(/[\n,]+/)
+    .map(normalizeName)
+    .filter(Boolean);
+  const newIds = newNames.map(nameItem => findOrCreatePlayer(nameItem).id);
+  const playerIds = [...new Set([...selectedIds, ...newIds])];
 
-  document.getElementById("progressFill").style.width = (realTotal ? realPlayed / realTotal * 100 : 0) + "%";
-  document.getElementById("progressLabel").textContent = `${realPlayed}/${realTotal} partidos jugados`;
+  if (playerIds.length < 2) {
+    alert("Necesitas al menos 2 jugadores para crear un torneo.");
+    return;
+  }
+  if (format === "rr_double_final_third" && playerIds.length < 5) {
+    alert("Este formato necesita al menos 5 jugadores para disputar 4.º vs 5.º por tercer lugar.");
+    return;
+  }
+
+  const championship = createChampionshipData(name, format, playerIds);
+  state.championships.unshift(championship);
+  state.currentChampionshipId = championship.id;
+  editingMatchId = null;
+  document.getElementById("championshipName").value = "";
+  document.getElementById("championshipNewPlayers").value = "";
+  switchTournamentTab("matches");
+  showView("tournament");
 }
 
-// ── ACTIONS ─────────────────────────────────────────────────────────────────
+function selectChampionship(id) {
+  state.currentChampionshipId = id;
+  editingMatchId = null;
+  switchTournamentTab("matches");
+  showView("tournament");
+}
+
+function addPlayerFromInput() {
+  const input = document.getElementById("playerNameInput");
+  if (findOrCreatePlayer(input.value)) input.value = "";
+  renderAll();
+}
+
+function deletePlayer(id) {
+  const isUsed = state.championships.some(championship => championship.playerIds.includes(id));
+  if (isUsed) {
+    alert("No se puede eliminar: este jugador ya participa en un torneo guardado.");
+    return;
+  }
+  state.players = state.players.filter(player => player.id !== id);
+  renderAll();
+}
+
+function findMatch(id) {
+  const current = getCurrentChampionship();
+  return current?.matches.find(match => match.id === id) || null;
+}
 
 function openEdit(id) {
-  editing = id;
+  editingMatchId = id;
   renderMatches();
-  setTimeout(() => { const el = document.getElementById("inputHome"); if (el) el.focus(); }, 50);
+  setTimeout(() => document.getElementById("inputHome")?.focus(), 50);
 }
 
-function cancelEdit() { editing = null; renderMatches(); }
+function cancelEdit() {
+  editingMatchId = null;
+  renderMatches();
+}
 
 function saveScore(id) {
-  const h = parseInt(document.getElementById("inputHome").value);
-  const a = parseInt(document.getElementById("inputAway").value);
-  if (isNaN(h) || isNaN(a) || h < 0 || a < 0) return;
-  const m = allMatches().find(x => x.id === id);
-  m.hs = h; m.as = a;
-  editing = null;
-  renderMatches();
-  renderTable();
+  const h = parseInt(document.getElementById("inputHome").value, 10);
+  const a = parseInt(document.getElementById("inputAway").value, 10);
+  if (Number.isNaN(h) || Number.isNaN(a) || h < 0 || a < 0) return;
+  const match = findMatch(id);
+  if (!match) return;
+  match.hs = h;
+  match.as = a;
+  editingMatchId = null;
+  syncDerivedMatches(getCurrentChampionship());
+  renderAll();
 }
 
 function clearScore(id) {
-  const m = allMatches().find(x => x.id === id);
-  m.hs = null; m.as = null;
-  editing = null;
-  renderMatches();
-  renderTable();
+  const match = findMatch(id);
+  if (!match) return;
+  match.hs = null;
+  match.as = null;
+  editingMatchId = null;
+  syncDerivedMatches(getCurrentChampionship());
+  renderAll();
 }
 
-function switchTab(tab) {
-  document.getElementById("matchesTab").style.display = tab === "matches" ? "block" : "none";
-  document.getElementById("tableTab").style.display   = tab === "table"   ? "block" : "none";
-  document.querySelectorAll(".tab").forEach((el, i) => {
-    el.classList.toggle("active", (i === 0 && tab === "matches") || (i === 1 && tab === "table"));
+function switchTournamentTab(tab) {
+  activeTournamentTab = tab;
+  ["matches", "table", "players"].forEach(name => {
+    document.getElementById(`${name}Tab`).style.display = name === tab ? "block" : "none";
   });
-  if (tab === "table") renderTable();
+  document.querySelectorAll(".tab").forEach(button => {
+    button.classList.toggle("active", button.getAttribute("onclick")?.includes(`'${tab}'`));
+  });
+  renderAll();
 }
 
-// Init
-renderMatches();
-renderTable();
+renderAll();
