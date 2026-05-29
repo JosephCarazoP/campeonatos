@@ -65,24 +65,24 @@ button { font: inherit; }
 .stat-card strong { display: block; margin-top: 12px; color: #fff; font-size: clamp(20px, 3vw, 30px); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stat-card small { display: block; margin-top: 8px; color: #8d79ff; letter-spacing: 2px; text-transform: uppercase; font-size: 11px; }
 
-.table-shell { overflow-x: auto; border: 1px solid rgba(255,255,255,.08); border-radius: 4px; background: rgba(4,6,10,.48); }
-.poster-table { width: 100%; min-width: 850px; border-collapse: collapse; table-layout: fixed; }
-.general-table { min-width: 980px; }
+.table-shell { overflow-x: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 4px; background: rgba(4,6,10,.48); }
+.poster-table { width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; }
+.general-table { min-width: 0; }
 .poster-table th { height: 62px; color: #c3c7d2; background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); letter-spacing: 3px; text-transform: uppercase; font-size: 12px; font-weight: 500; text-align: center; border-bottom: 1px solid rgba(255,255,255,.14); }
-.poster-table th:first-child { width: 86px; background: rgba(0,0,0,.42); }
-.poster-table th:nth-child(2) { width: 255px; text-align: left; padding-left: 28px; }
-.poster-table td { height: 98px; color: #e9edf7; text-align: center; border-bottom: 1px solid rgba(255,255,255,.09); border-right: 1px solid rgba(255,255,255,.045); font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.poster-table th:first-child { width: 7%; background: rgba(0,0,0,.42); }
+.poster-table th:nth-child(2) { width: 29%; text-align: left; padding-left: 18px; }
+.poster-table td { height: 98px; color: #e9edf7; text-align: center; border-bottom: 1px solid rgba(255,255,255,.09); border-right: 1px solid rgba(255,255,255,.045); font-size: clamp(10px, 1.8vw, 21px); font-weight: 800; font-variant-numeric: tabular-nums; }
 .poster-table tr:last-child td { border-bottom: 0; }
 .rank-cell { background: linear-gradient(90deg, rgba(124,92,255,.32), rgba(124,92,255,.08)); color: #dfe5ff; }
 .rank-cell span { display: inline-block; font-size: 42px; font-weight: 300; }
-.player-cell { text-align: left !important; padding-left: 22px; display: flex; align-items: center; gap: 20px; height: 98px; }
-.player-cell strong { font-size: 22px; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-cell { text-align: left !important; padding-left: 14px; display: flex; align-items: center; gap: 12px; height: 98px; min-width: 0; }
+.player-cell strong { min-width: 0; font-size: clamp(10px, 1.9vw, 22px); letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .avatar { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #05070b; font-size: 18px; font-weight: 950; flex-shrink: 0; }
 .avatar.small { width: 30px; height: 30px; font-size: 11px; }
 .green, .win { color: var(--green) !important; }
 .yellow, .draw { color: var(--yellow) !important; }
 .red, .loss { color: var(--red) !important; }
-.points { color: var(--purple) !important; font-size: 36px !important; }
+.points { color: var(--purple) !important; font-size: clamp(11px, 2vw, 36px) !important; }
 .empty-cell, .empty-state { color: var(--muted); text-align: center; padding: 28px; }
 .poster-footer { margin: 32px 0 4px; text-align: center; color: #e7e9ef; letter-spacing: 8px; text-transform: uppercase; font-size: 16px; }
 .poster-footer span { color: var(--purple); }
@@ -143,7 +143,7 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
   .tabs { justify-content: flex-start; }
   .match-row { grid-template-columns: 1fr; }
   .team, .team.right { justify-content: center; text-align: center; }
-  .poster-table th:nth-child(2) { width: 210px; }
+  .poster-table th:nth-child(2) { width: 29%; }
   .poster-table td { height: 78px; font-size: 16px; }
   .player-cell { height: 78px; gap: 12px; }
   .player-cell strong { font-size: 17px; }
@@ -199,15 +199,15 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
   border-radius: 14px;
   background: rgba(5, 8, 13, .54);
 }
-.poster-table { min-width: 720px; }
-.general-table { min-width: 840px; }
+.poster-table { min-width: 0; }
+.general-table { min-width: 0; }
 .poster-table th {
   height: 42px;
   font-size: 10px;
   letter-spacing: 1.7px;
 }
-.poster-table th:first-child { width: 58px; }
-.poster-table th:nth-child(2) { width: 190px; padding-left: 16px; }
+.poster-table th:first-child { width: 7%; }
+.poster-table th:nth-child(2) { width: 29%; padding-left: 12px; }
 .poster-table td {
   height: 54px;
   font-size: 13px;
@@ -281,8 +281,7 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
   .stat-card { aspect-ratio: unset; min-height: 112px; }
   .tournament-tab { padding: 12px; }
   .tabs { width: 100%; }
-  .poster-table { min-width: 680px; }
-  .general-table { min-width: 800px; }
+  .poster-table, .general-table { min-width: 0; }
   .poster-table td { height: 50px; }
   .player-cell { height: 50px; }
 }
@@ -403,11 +402,11 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
   border-radius: 12px;
 }
 .poster-table {
-  min-width: 620px;
+  min-width: 0;
   font-size: 11px;
 }
 .general-table {
-  min-width: 720px;
+  min-width: 0;
 }
 .poster-table th {
   height: 30px;
@@ -416,10 +415,10 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
   letter-spacing: 1.1px;
 }
 .poster-table th:first-child {
-  width: 42px;
+  width: 7%;
 }
 .poster-table th:nth-child(2) {
-  width: 156px;
+  width: 29%;
   padding-left: 10px;
 }
 .poster-table td {
@@ -457,4 +456,15 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
 }
 .tournament-poster .stats-grid {
   margin-bottom: 16px;
+}
+
+@media (max-width: 520px) {
+  .poster-panel { padding-inline: 8px; }
+  .poster-table th { padding: 0 3px; font-size: 7px; letter-spacing: .4px; }
+  .poster-table td { padding: 0 3px; font-size: 9px; }
+  .poster-table th:nth-child(2) { padding-left: 6px; }
+  .player-cell { gap: 4px; padding-left: 5px; }
+  .player-cell strong { font-size: 9px; letter-spacing: 0; }
+  .player-cell .avatar, .poster-table .avatar { width: 18px; height: 18px; font-size: 6px; }
+  .rank-cell span, .points { font-size: 11px !important; }
 }
