@@ -2,131 +2,48 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Torneo FIFA 26</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <div class="bg-glow1"></div>
   <div class="bg-glow2"></div>
   <div class="bg-grid"></div>
+  <div class="side-text">TORNEO FAMILIA PALMEÑA</div>
 
-  <header>
-    <div class="badge">FIFA 26</div>
+  <header class="hero-header">
+    <div class="kicker">FIFA 26</div>
     <h1 id="appTitle">TORNEO</h1>
-    <p class="subtitle" id="appSubtitle">⚽ Campeonatos locales entre amigos</p>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <p class="progress-label" id="progressLabel">0/0 partidos jugados</p>
+    <p class="subtitle" id="appSubtitle">Familia palmeña · Champions League de amigos</p>
+    <div class="progress-pill" id="progressPill">0 / 0 partidos jugados</div>
   </header>
 
-  <nav class="tabs" aria-label="Secciones del torneo">
-    <button class="tab active" onclick="switchTab('championships')">🏟️ Campeonatos</button>
-    <button class="tab" onclick="switchTab('matches')">⚽ Partidos</button>
-    <button class="tab" onclick="switchTab('table')">🏆 Tabla</button>
-    <button class="tab" onclick="switchTab('stats')">📊 General</button>
-    <button class="tab" onclick="switchTab('players')">👥 Jugadores</button>
-  </nav>
-
   <main class="content">
-    <section id="championshipsTab">
-      <div class="panel">
-        <div class="panel-heading">
-          <div>
-            <h2>Crear campeonato</h2>
-            <p>Elige reglas, jugadores y se generará el calendario aleatoriamente.</p>
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <label class="field">
-            <span>Nombre del campeonato</span>
-            <input id="championshipName" type="text" placeholder="Ej: Sábado Champions" />
-          </label>
-          <label class="field">
-            <span>Formato</span>
-            <select id="championshipRounds">
-              <option value="1">Solo ida</option>
-              <option value="2" selected>Ida y vuelta</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="field block-field">
-          <span>Jugadores precargados</span>
-          <div class="player-picker" id="playerPicker"></div>
-        </div>
-
-        <label class="field block-field">
-          <span>Agregar jugadores nuevos para este campeonato</span>
-          <textarea id="championshipNewPlayers" rows="3" placeholder="Un jugador por línea o separados por comas"></textarea>
-        </label>
-
-        <button class="btn-primary" onclick="createChampionship()">✨ Crear y sortear partidos</button>
+    <section id="homeView" class="view">
+      <div class="home-actions">
+        <button class="btn-primary big" onclick="showCreateView()">Crear torneo</button>
+        <button class="btn-secondary big" onclick="showSelectView()">Seleccionar torneo existente</button>
       </div>
 
-      <div class="panel compact-panel">
-        <div class="panel-heading">
-          <div>
-            <h2>Campeonatos guardados</h2>
-            <p>Cada campeonato mantiene su propia tabla y reglas localmente.</p>
-          </div>
+      <section class="poster-panel">
+        <div class="panel-heading centered">
+          <span>Datos generales</span>
+          <h2>Historial global</h2>
+          <p>Todos los torneos, estén en juego o finalizados, alimentan esta tabla.</p>
         </div>
-        <div id="championshipList" class="championship-list"></div>
-      </div>
-    </section>
-
-    <section id="matchesTab" style="display:none">
-      <div class="empty-state" id="matchesEmpty">Crea o selecciona un campeonato para ver los partidos.</div>
-      <div id="matchesContainer"></div>
-    </section>
-
-    <section id="tableTab" style="display:none">
-      <div class="stats-strip" id="localHighlights"></div>
-      <div class="table-wrap">
-        <table class="standings-table">
-          <thead>
-            <tr>
-              <th class="rank-head">#</th>
-              <th class="avatar-head"></th>
-              <th class="name-head">Jugador</th>
-              <th>PJ</th>
-              <th>V</th>
-              <th>E</th>
-              <th>D</th>
-              <th>GF</th>
-              <th>GC</th>
-              <th>DIF</th>
-              <th>PC</th>
-              <th>PTS</th>
-            </tr>
-          </thead>
-          <tbody id="standingsBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="statsTab" style="display:none">
-      <div class="panel compact-panel">
-        <div class="panel-heading">
-          <div>
-            <h2>Tabla general</h2>
-            <p>Acumula los datos de todos los campeonatos guardados.</p>
-          </div>
-        </div>
-        <div class="stats-strip" id="globalHighlights"></div>
-        <div class="table-wrap general-table-wrap">
-          <table class="standings-table">
+        <div id="globalHighlights" class="stats-grid"></div>
+        <div class="table-shell">
+          <table class="poster-table general-table">
             <thead>
               <tr>
-                <th class="rank-head">#</th>
-                <th class="avatar-head"></th>
-                <th class="name-head">Jugador</th>
-                <th>Torneos</th>
+                <th>Pos.</th>
+                <th>Jugador</th>
+                <th>T</th>
                 <th>PJ</th>
-                <th>V</th>
+                <th>G</th>
                 <th>E</th>
-                <th>D</th>
+                <th>P</th>
                 <th>GF</th>
                 <th>GC</th>
                 <th>DIF</th>
@@ -137,23 +54,118 @@
             <tbody id="globalStandingsBody"></tbody>
           </table>
         </div>
+      </section>
+    </section>
+
+    <section id="createView" class="view" style="display:none">
+      <button class="btn-link" onclick="showHomeView()">← Volver al inicio</button>
+      <div class="panel form-panel">
+        <div class="panel-heading">
+          <span>Nuevo torneo</span>
+          <h2>Crear y sortear calendario</h2>
+          <p>El formato, jugadores y reglas quedan guardados solo para este torneo.</p>
+        </div>
+        <div class="form-grid">
+          <label class="field">
+            <span>Nombre del torneo</span>
+            <input id="championshipName" type="text" placeholder="Ej: Torneo Familia Palmeña" />
+          </label>
+          <label class="field">
+            <span>Formato</span>
+            <select id="championshipFormat">
+              <option value="round_robin_double" selected>Ida y vuelta</option>
+              <option value="round_robin_single">Solo ida</option>
+              <option value="rr_double_final_third">Ida y vuelta + final + 4.º vs 5.º por tercero</option>
+              <option value="rr_double_final">Ida y vuelta + final sin tercer lugar</option>
+              <option value="league_champion">Liga: el primero queda campeón</option>
+              <option value="champions_knockout">Tipo Champions: eliminación directa</option>
+            </select>
+          </label>
+        </div>
+        <div class="field block-field">
+          <span>Jugadores precargados</span>
+          <div class="player-picker" id="playerPicker"></div>
+        </div>
+        <label class="field block-field">
+          <span>Agregar jugadores nuevos para este torneo</span>
+          <textarea id="championshipNewPlayers" rows="3" placeholder="Un jugador por línea o separados por comas"></textarea>
+        </label>
+        <button class="btn-primary" onclick="createChampionship()">✨ Crear torneo</button>
       </div>
     </section>
 
-    <section id="playersTab" style="display:none">
-      <div class="panel">
-        <div class="panel-heading">
-          <div>
-            <h2>Jugadores</h2>
-            <p>Estos jugadores se precargan al crear un campeonato. El avatar usa iniciales y un color único.</p>
-          </div>
+    <section id="selectView" class="view" style="display:none">
+      <button class="btn-link" onclick="showHomeView()">← Volver al inicio</button>
+      <section class="poster-panel">
+        <div class="panel-heading centered">
+          <span>Torneos guardados</span>
+          <h2>Seleccionar torneo existente</h2>
+          <p>Abre torneos en juego o finalizados para ver y modificar resultados.</p>
         </div>
-        <div class="inline-form">
-          <input id="playerNameInput" type="text" placeholder="Nombre del jugador" />
-          <button class="btn-primary" onclick="addPlayerFromInput()">➕ Agregar</button>
+        <div id="championshipList" class="championship-list"></div>
+      </section>
+    </section>
+
+    <section id="tournamentView" class="view" style="display:none">
+      <div class="tournament-toolbar">
+        <button class="btn-link" onclick="showHomeView()">← Inicio</button>
+        <div class="tabs" aria-label="Secciones del torneo">
+          <button class="tab active" onclick="switchTournamentTab('matches')">Partidos</button>
+          <button class="tab" onclick="switchTournamentTab('table')">Tabla</button>
+          <button class="tab" onclick="switchTournamentTab('players')">Jugadores</button>
         </div>
-        <div id="playersList" class="players-list"></div>
       </div>
+
+      <section id="matchesTab" class="tournament-tab">
+        <div id="tournamentSummary" class="summary-grid"></div>
+        <div id="matchesContainer"></div>
+      </section>
+
+      <section id="tableTab" class="tournament-tab" style="display:none">
+        <section class="poster-panel tournament-poster">
+          <div class="panel-heading centered">
+            <span>FIFA 26</span>
+            <h2 id="tableTournamentName">Torneo</h2>
+            <p id="tableTournamentFormat">Champions League de amigos</p>
+          </div>
+          <div id="localHighlights" class="stats-grid"></div>
+          <div class="table-shell">
+            <table class="poster-table">
+              <thead>
+                <tr>
+                  <th>Pos.</th>
+                  <th>Jugador</th>
+                  <th>PJ</th>
+                  <th>G</th>
+                  <th>E</th>
+                  <th>P</th>
+                  <th>GF</th>
+                  <th>GC</th>
+                  <th>DIF</th>
+                  <th>PTS</th>
+                </tr>
+              </thead>
+              <tbody id="standingsBody"></tbody>
+            </table>
+          </div>
+          <p class="poster-footer">Pasión. <span>Familia.</span> Competencia.</p>
+        </section>
+      </section>
+
+      <section id="playersTab" class="tournament-tab" style="display:none">
+        <div class="panel">
+          <div class="panel-heading">
+            <span>Jugadores</span>
+            <h2>Jugadores precargados</h2>
+            <p>Estos jugadores se podrán usar en los próximos torneos. El color del avatar no se repite.</p>
+          </div>
+          <div class="inline-form">
+            <input id="playerNameInput" type="text" placeholder="Nombre del jugador" />
+            <button class="btn-primary" onclick="addPlayerFromInput()">Agregar</button>
+          </div>
+          <div id="playersList" class="players-list"></div>
+        </div>
+      </section>
     </section>
   </main>
 
