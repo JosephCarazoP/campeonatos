@@ -150,3 +150,139 @@ input:focus, select:focus, textarea:focus { border-color: rgba(124,92,255,.75); 
   .rank-cell span, .points { font-size: 28px !important; }
   .avatar { width: 44px; height: 44px; font-size: 14px; }
 }
+
+/* Refinements: graphic dashboard cards, compact tables and cleaner tournament sections */
+.stats-grid, .summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  min-height: 138px;
+  aspect-ratio: 1 / .86;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(124,92,255,.34);
+  background:
+    radial-gradient(circle at 85% 15%, rgba(124,92,255,.34), transparent 34%),
+    linear-gradient(145deg, rgba(255,255,255,.095), rgba(255,255,255,.025));
+}
+.stat-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -24px -34px auto;
+  width: 88px;
+  height: 88px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 26px;
+  transform: rotate(18deg);
+}
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(124,92,255,.20);
+  border: 1px solid rgba(124,92,255,.28);
+  font-size: 18px;
+}
+.stat-card span { letter-spacing: 2px; font-size: 9px; }
+.stat-card strong { font-size: clamp(18px, 2.6vw, 26px); margin-top: 8px; }
+.stat-card small { letter-spacing: 1.2px; }
+
+.table-shell {
+  border-radius: 14px;
+  background: rgba(5, 8, 13, .54);
+}
+.poster-table { min-width: 720px; }
+.general-table { min-width: 840px; }
+.poster-table th {
+  height: 42px;
+  font-size: 10px;
+  letter-spacing: 1.7px;
+}
+.poster-table th:first-child { width: 58px; }
+.poster-table th:nth-child(2) { width: 190px; padding-left: 16px; }
+.poster-table td {
+  height: 54px;
+  font-size: 13px;
+  font-weight: 750;
+}
+.rank-cell span { font-size: 20px; font-weight: 800; }
+.player-cell { height: 54px; gap: 10px; padding-left: 14px; }
+.player-cell strong { font-size: 13px; letter-spacing: .8px; }
+.player-cell .avatar, .poster-table .avatar { width: 34px; height: 34px; font-size: 11px; }
+.points { font-size: 19px !important; }
+.poster-footer { margin-top: 18px; font-size: 11px; letter-spacing: 5px; }
+
+.tournament-toolbar {
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  background: rgba(255,255,255,.035);
+}
+.tabs { width: min(100%, 460px); }
+.tab {
+  flex: 1;
+  border-radius: 14px;
+  text-align: center;
+  padding: 12px 14px;
+}
+.tournament-tab {
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  box-shadow: 0 18px 44px rgba(0,0,0,.24);
+}
+.tournament-tab .poster-panel, .tournament-tab .panel {
+  margin-bottom: 0;
+  border-radius: 18px;
+}
+.summary-grid .stat-card {
+  min-height: 118px;
+  aspect-ratio: unset;
+}
+.session-label {
+  margin: 18px 0 10px;
+  padding-left: 4px;
+  letter-spacing: 2.5px;
+}
+.match-card, .bye-card {
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(9, 13, 20, .68);
+}
+.match-tag { margin-bottom: 8px; font-size: 10px; }
+.match-row { grid-template-columns: minmax(0, 1fr) 108px minmax(0, 1fr); }
+.team .avatar { width: 38px; height: 38px; font-size: 12px; }
+.team strong { font-size: 13px; }
+.score-display { font-size: 23px; }
+.actions { margin-top: 10px; }
+.btn-ghost, .btn-save, .btn-danger { border-radius: 10px; padding: 7px 11px; }
+.player-row {
+  border-radius: 16px;
+  background: rgba(9,13,20,.62);
+}
+.empty-state.compact {
+  width: 100%;
+  padding: 14px;
+  border: 1px dashed rgba(255,255,255,.14);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+}
+
+@media (max-width: 800px) {
+  .stat-card { aspect-ratio: unset; min-height: 112px; }
+  .tournament-tab { padding: 12px; }
+  .tabs { width: 100%; }
+  .poster-table { min-width: 680px; }
+  .general-table { min-width: 800px; }
+  .poster-table td { height: 50px; }
+  .player-cell { height: 50px; }
+}

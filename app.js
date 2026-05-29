@@ -1,5 +1,5 @@
-const STORAGE_KEY = "fifa26_championship_manager_v2";
-const LEGACY_STORAGE_KEY = "fifa26_championship_manager_v1";
+const STORAGE_KEY = "fifa26_championship_manager_v3";
+const LEGACY_STORAGE_KEYS = ["fifa26_championship_manager_v1", "fifa26_championship_manager_v2"];
 const COLOR_PALETTE = [
   "#2F80ED", "#27D36F", "#8B5CF6", "#FF6B35", "#FACC15", "#EC4899",
   "#14B8A6", "#38BDF8", "#F43F5E", "#84CC16", "#D946EF", "#A3E635",
@@ -46,25 +46,20 @@ function initials(name) {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved?.players?.length) return saved;
+    if (saved && Array.isArray(saved.players) && Array.isArray(saved.championships)) return saved;
   } catch (error) {
     console.warn("No se pudo leer el estado guardado", error);
   }
 
-  try {
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
-  } catch (error) {
-    console.warn("No se pudo limpiar el estado anterior", error);
-  }
+  LEGACY_STORAGE_KEYS.forEach(key => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn("No se pudo limpiar el estado anterior", error);
+    }
+  });
 
-  const players = ["Joseph", "Brenes", "Daniel", "Isaac", "Leo"].map((name, index) => ({
-    id: uid("player"),
-    name,
-    color: COLOR_PALETTE[index]
-  }));
-  const demo = createChampionshipData("Torneo Familia Palmeña", "round_robin_double", players.map(player => player.id));
-  seedDemoScores(demo);
-  return { players, championships: [demo], currentChampionshipId: demo.id };
+  return { players: [], championships: [], currentChampionshipId: null };
 }
 
 function saveState() {
@@ -222,14 +217,6 @@ function buildKnockoutRound(playerIds, round, startId) {
     });
   }
   return matches;
-}
-
-function seedDemoScores(championship) {
-  const scores = [[3, 2], [1, 1], [4, 2], [2, 0], [1, 3], [5, 2], [0, 0], [2, 4]];
-  championship.matches.slice(0, scores.length).forEach((match, index) => {
-    match.hs = scores[index][0];
-    match.as = scores[index][1];
-  });
 }
 
 function leagueMatches(championship) {
@@ -401,21 +388,29 @@ function championName(championship) {
 function highlights(stats, championships = state.championships) {
   const withGames = stats.filter(player => player.pj > 0);
   const finished = championships.filter(championship => championshipStatus(championship) === "Finalizado").length;
+  const allMatches = championships.flatMap(championship => championship.matches || []);
+  const playedCount = allMatches.filter(played).length;
+  const totalGoals = allMatches.reduce((sum, match) => played(match) ? sum + match.hs + match.as : sum, 0);
+
   if (!withGames.length) return [
-    { label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
-    { label: "Más victorias", value: "—", sub: "Sin partidos" },
-    { label: "Más goleador", value: "—", sub: "Sin goles" },
-    { label: "Porterías a cero", value: "—", sub: "Sin datos" }
+    { icon: "🏆", label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
+    { icon: "⚽", label: "Partidos", value: playedCount, sub: `${allMatches.length} programados` },
+    { icon: "🥅", label: "Goles", value: totalGoals, sub: "Total anotado" },
+    { icon: "🔥", label: "Más victorias", value: "—", sub: "Sin partidos" },
+    { icon: "🎯", label: "Goleador", value: "—", sub: "Sin goles" },
+    { icon: "🧤", label: "Porterías", value: "—", sub: "Sin datos" }
   ];
 
   const byWins = [...withGames].sort((a, b) => b.v - a.v || b.pts - a.pts)[0];
   const byGoals = [...withGames].sort((a, b) => b.gf - a.gf || b.v - a.v)[0];
   const byCleanSheets = [...withGames].sort((a, b) => b.cleanSheets - a.cleanSheets || b.v - a.v)[0];
   return [
-    { label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
-    { label: "Más victorias", value: byWins.name, sub: `${byWins.v} ganados` },
-    { label: "Más goleador", value: byGoals.name, sub: `${byGoals.gf} goles` },
-    { label: "Porterías a cero", value: byCleanSheets.name, sub: `${byCleanSheets.cleanSheets} partidos` }
+    { icon: "🏆", label: "Torneos", value: championships.length, sub: `${finished} finalizados` },
+    { icon: "⚽", label: "Partidos", value: playedCount, sub: `${allMatches.length} programados` },
+    { icon: "🥅", label: "Goles", value: totalGoals, sub: "Total anotado" },
+    { icon: "🔥", label: "Más victorias", value: byWins.name, sub: `${byWins.v} ganados` },
+    { icon: "🎯", label: "Goleador", value: byGoals.name, sub: `${byGoals.gf} goles` },
+    { icon: "🧤", label: "Porterías", value: byCleanSheets.name, sub: `${byCleanSheets.cleanSheets} en cero` }
   ];
 }
 
@@ -434,9 +429,12 @@ function renderHeader() {
 function renderHighlights(containerId, stats, championships) {
   document.getElementById(containerId).innerHTML = highlights(stats, championships).map(item => `
     <article class="stat-card">
-      <span>${escapeHTML(item.label)}</span>
-      <strong>${escapeHTML(item.value)}</strong>
-      <small>${escapeHTML(item.sub)}</small>
+      <div class="stat-icon">${item.icon}</div>
+      <div>
+        <span>${escapeHTML(item.label)}</span>
+        <strong>${escapeHTML(item.value)}</strong>
+        <small>${escapeHTML(item.sub)}</small>
+      </div>
     </article>
   `).join("");
 }
@@ -476,6 +474,10 @@ function renderGlobalStats() {
 
 function renderPlayerPicker() {
   const picker = document.getElementById("playerPicker");
+  if (!state.players.length) {
+    picker.innerHTML = `<div class="empty-state compact">No hay jugadores guardados todavía. Agrega nombres abajo para crear el primer torneo.</div>`;
+    return;
+  }
   picker.innerHTML = state.players.map(player => `
     <label class="player-chip">
       <input type="checkbox" value="${player.id}" checked />
@@ -511,14 +513,17 @@ function renderChampionshipList() {
 
 function renderTournamentSummary() {
   const current = getCurrentChampionship();
-  if (!current) return;
+  if (!current) {
+    document.getElementById("tournamentSummary").innerHTML = "";
+    return;
+  }
   const standings = buildStats([current], current.playerIds);
   const done = current.matches.filter(played).length;
   document.getElementById("tournamentSummary").innerHTML = `
-    <article class="stat-card"><span>Estado</span><strong>${championshipStatus(current)}</strong><small>${done}/${current.matches.length} partidos</small></article>
-    <article class="stat-card"><span>Formato</span><strong>${escapeHTML(formatConfig(current.format).label)}</strong><small>${current.playerIds.length} jugadores</small></article>
-    <article class="stat-card"><span>Líder</span><strong>${escapeHTML(standings[0]?.name || "—")}</strong><small>${standings[0]?.pts || 0} pts</small></article>
-    <article class="stat-card"><span>Campeón</span><strong>${escapeHTML(championName(current))}</strong><small>Actualizado en vivo</small></article>
+    <article class="stat-card"><div class="stat-icon">📌</div><div><span>Estado</span><strong>${championshipStatus(current)}</strong><small>${done}/${current.matches.length} partidos</small></div></article>
+    <article class="stat-card"><div class="stat-icon">⚙️</div><div><span>Formato</span><strong>${escapeHTML(formatConfig(current.format).label)}</strong><small>${current.playerIds.length} jugadores</small></div></article>
+    <article class="stat-card"><div class="stat-icon">👑</div><div><span>Líder</span><strong>${escapeHTML(standings[0]?.name || "—")}</strong><small>${standings[0]?.pts || 0} pts</small></div></article>
+    <article class="stat-card"><div class="stat-icon">🏁</div><div><span>Campeón</span><strong>${escapeHTML(championName(current))}</strong><small>Actualizado en vivo</small></div></article>
   `;
 }
 
@@ -598,25 +603,33 @@ function buildMatchCard(match) {
 
 function renderLocalTable() {
   const current = getCurrentChampionship();
-  if (!current) return;
+  if (!current) {
+    document.getElementById("standingsBody").innerHTML = `<tr><td colspan="10" class="empty-cell">Selecciona o crea un torneo.</td></tr>`;
+    document.getElementById("localHighlights").innerHTML = "";
+    return;
+  }
   syncDerivedMatches(current);
   const standings = buildStats([current], current.playerIds);
   document.getElementById("tableTournamentName").textContent = current.name;
   document.getElementById("tableTournamentFormat").textContent = formatConfig(current.format).label;
   renderHighlights("localHighlights", standings, [current]);
-  document.getElementById("standingsBody").innerHTML = standings.map((player, index) => posterRow(player, index, false)).join("");
+  document.getElementById("standingsBody").innerHTML = standings.length
+    ? standings.map((player, index) => posterRow(player, index, false)).join("")
+    : `<tr><td colspan="10" class="empty-cell">Sin resultados todavía.</td></tr>`;
 }
 
 function renderPlayers() {
-  document.getElementById("playersList").innerHTML = state.players.map(player => `
-    <article class="player-row">
-      <div class="player-row-main">
-        <span class="avatar" style="background:${player.color}">${initials(player.name)}</span>
-        <div><strong>${escapeHTML(player.name)}</strong><small>${player.color}</small></div>
-      </div>
-      <button class="btn-danger" onclick="deletePlayer('${player.id}')">Eliminar</button>
-    </article>
-  `).join("");
+  document.getElementById("playersList").innerHTML = state.players.length
+    ? state.players.map(player => `
+      <article class="player-row">
+        <div class="player-row-main">
+          <span class="avatar" style="background:${player.color}">${initials(player.name)}</span>
+          <div><strong>${escapeHTML(player.name)}</strong><small>${player.color}</small></div>
+        </div>
+        <button class="btn-danger" onclick="deletePlayer('${player.id}')">Eliminar</button>
+      </article>
+    `).join("")
+    : `<div class="empty-state compact">No hay jugadores todavía.</div>`;
 }
 
 function renderAll() {
